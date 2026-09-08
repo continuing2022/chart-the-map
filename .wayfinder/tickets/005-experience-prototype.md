@@ -3,8 +3,8 @@ kind: issue
 labels:
   - wayfinder:prototype
 parent: ../meal-diary-mvp-map.md
-status: open
-assignee: null
+status: closed
+assignee: root
 blocked_by:
   - 001-core-recording-flow.md
 ---

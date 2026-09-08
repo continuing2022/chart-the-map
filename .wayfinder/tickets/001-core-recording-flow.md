@@ -3,7 +3,7 @@ kind: issue
 labels:
   - wayfinder:grilling
 parent: ../meal-diary-mvp-map.md
-status: open
+status: closed
 assignee: root
 ---
 

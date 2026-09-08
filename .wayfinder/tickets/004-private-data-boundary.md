@@ -3,8 +3,8 @@ kind: issue
 labels:
   - wayfinder:research
 parent: ../meal-diary-mvp-map.md
-status: open
-assignee: null
+status: closed
+assignee: privacy_research
 ---
 
 # 确定私密云端数据边界与合规要求

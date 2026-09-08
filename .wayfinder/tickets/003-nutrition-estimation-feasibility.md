@@ -3,8 +3,8 @@ kind: issue
 labels:
   - wayfinder:research
 parent: ../meal-diary-mvp-map.md
-status: open
-assignee: null
+status: closed
+assignee: nutrition_research
 ---
 
 # 验证餐食营养估算方案

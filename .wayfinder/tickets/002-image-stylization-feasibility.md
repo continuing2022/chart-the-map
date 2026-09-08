@@ -3,8 +3,8 @@ kind: issue
 labels:
   - wayfinder:research
 parent: ../meal-diary-mvp-map.md
-status: open
-assignee: null
+status: closed
+assignee: image_stylization_research
 ---
 
 # 验证照片风格化服务的可行性与体验底线
