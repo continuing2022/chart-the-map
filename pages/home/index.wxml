@@ -22,14 +22,15 @@
     <view wx:for="{{slots}}" wx:key="key" class="meal-card {{slot.record ? 'filled' : 'empty'}}">
       <view class="slot-heading">
         <view class="slot-name">{{slot.emoji}} {{slot.label}}</view>
-        <view wx:if="{{slot.record && slot.record.stylizationStatus === 'processing'}}" class="status">正在绘制</view>
-        <view wx:elif="{{slot.record && slot.record.nutritionStatus === 'processing'}}" class="status">正在分析</view>
+        <view wx:if="{{slot.record && slot.record.stylizationTask.status === 'processing'}}" class="status">正在绘制</view>
+        <view wx:elif="{{slot.record && slot.record.nutritionTask.status === 'processing'}}" class="status">正在分析</view>
+        <view wx:elif="{{slot.record && (slot.record.stylizationTask.status === 'failed' || slot.record.nutritionTask.status === 'failed')}}" class="status error">需要重试</view>
       </view>
       <view wx:if="{{slot.record}}" class="record-row" bindtap="openDetail" data-id="{{slot.record.id}}">
         <image class="meal-image" src="{{slot.record.stylizedImage || slot.record.imagePath}}" mode="aspectFill" />
         <view class="record-copy">
-          <view class="record-title">{{slot.record.stylizationStatus === 'completed' ? slot.record.style + '风格回忆' : '照片已保存'}}</view>
-          <view class="record-subtitle">{{slot.record.nutritionStatus === 'completed' ? '营养估算已生成' : '你可以先离开，结果会自动回来'}}</view>
+          <view class="record-title">{{slot.record.stylizationTask.status === 'completed' ? slot.record.style + '风格回忆' : '照片已保存'}}</view>
+          <view class="record-subtitle">{{slot.record.nutritionTask.status === 'completed' ? '营养估算已生成' : '你可以先离开，结果会自动回来'}}</view>
           <view wx:if="{{slot.record.isMock}}" class="mock-badge">本地模拟</view>
         </view>
         <view class="chevron">›</view>

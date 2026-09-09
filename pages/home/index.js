@@ -1,4 +1,5 @@
 const mealService = require('../../services/meal-service')
+const imageStorage = require('../../services/image-storage')
 const { displayDate, toDateKey, yesterdayKey } = require('../../utils/date')
 
 Page({
@@ -39,13 +40,28 @@ Page({
     })
   },
 
-  saveImage(slot, imagePath) {
+  async saveImage(slot, tempFilePath) {
     const existing = slot.record
-    const create = () => {
-      mealService.createRecord({ dateKey: this.data.todayKey, slotKey: slot.key, imagePath })
-      this.refresh()
-      wx.showToast({ title: '已保存，正在生成', icon: 'none' })
-      setTimeout(() => this.refresh(), 1500)
+    const create = async () => {
+      wx.showLoading({ title: '正在保存', mask: true })
+      let savedImage = null
+      try {
+        savedImage = await imageStorage.saveSelectedImage(tempFilePath)
+        const result = mealService.createRecord({
+          dateKey: this.data.todayKey,
+          slotKey: slot.key,
+          ...savedImage
+        })
+        await imageStorage.removeRecordFiles(result.replacedRecord)
+        this.refresh()
+        wx.showToast({ title: '已保存，正在生成', icon: 'none' })
+        setTimeout(() => this.refresh(), 1500)
+      } catch (error) {
+        if (savedImage) await imageStorage.removeSavedFile(savedImage.imagePath, savedImage.imageManaged)
+        wx.showToast({ title: '照片保存失败，请重试', icon: 'none' })
+      } finally {
+        wx.hideLoading()
+      }
     }
     if (!existing) return create()
     wx.showModal({

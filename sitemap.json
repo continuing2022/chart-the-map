@@ -1,4 +1,9 @@
 {
   "desc": "AI 饮食日记小程序",
-  "rules": []
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
 }

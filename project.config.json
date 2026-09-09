@@ -1,13 +1,28 @@
 {
-  "miniprogramRoot": "./",
+  "miniprogramRoot": "",
   "projectname": "meal-diary",
   "description": "AI 饮食日记 MVP",
-  "appid": "touristappid",
+  "appid": "wxef9f659e8044ace6",
   "compileType": "miniprogram",
   "setting": {
     "es6": true,
     "minified": false,
     "postcss": true,
-    "urlCheck": false
+    "urlCheck": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "libVersion": "3.17.3",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
   }
 }

@@ -7,9 +7,9 @@
   ],
   "window": {
     "navigationBarTitleText": "食光日记",
-    "navigationBarBackgroundColor": "#F7F7FA",
+    "navigationBarBackgroundColor": "#FAE653",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F7F7FA",
+    "backgroundColor": "#FFFBE8",
     "backgroundTextStyle": "light"
   },
   "style": "v2",

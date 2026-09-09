@@ -1,0 +1,8 @@
+{
+  "name": "meal-diary-miniprogram",
+  "private": true,
+  "scripts": {
+    "test": "node tests/meal-service.test.js",
+    "check": "node --check services/meal-service.js && node --check services/image-storage.js && node --check pages/home/index.js && node --check pages/detail/index.js"
+  }
+}
