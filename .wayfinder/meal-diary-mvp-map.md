@@ -31,6 +31,7 @@ status: open
 - [确定私密云端数据边界与合规要求](./comments/004-private-data-boundary-resolution.md)：境内最小化存储、明示微信隐私授权、AI 供应商受托且不训练、全量导出/删除和 AI 标识是 MVP 前置条件。
 - [绘制首页与餐食详情的可视原型](./comments/005-experience-prototype-resolution.md)：两栏导航、四个餐次卡位、图片优先的详情与次日全屏回顾，采用 Apple 风格加少量贴纸的视觉方向。
 - [决定 AI 结果、重试与人工修正的一致性规则](./comments/006-derived-data-consistency-resolution.md)：一餐仅保留最新风格图；用户确认的营养不被自动覆盖；替换或删除餐食时清除所有派生数据且任务不得回写。
+- [准备 AI 服务 POC 所需的访问与验收样本](./comments/007-ai-provider-poc-access-resolution.md)：用户已完成腾讯云 POC 的账号、预算、私有 COS 与测试样本准备；没有凭证进入仓库或聊天。
 
 ## Not yet specified
 

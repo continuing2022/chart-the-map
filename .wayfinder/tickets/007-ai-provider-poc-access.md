@@ -3,7 +3,7 @@ kind: issue
 labels:
   - wayfinder:task
 parent: ../meal-diary-mvp-map.md
-status: open
+status: closed
 assignee: root
 assets:
   - ../prototypes/ai-service-poc-plan.md
