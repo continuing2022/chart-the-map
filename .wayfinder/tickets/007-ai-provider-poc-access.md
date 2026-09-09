@@ -7,6 +7,7 @@ status: open
 assignee: root
 assets:
   - ../prototypes/ai-service-poc-plan.md
+  - ../comments/007-ai-provider-poc-access-progress.md
 ---
 
 # 准备 AI 服务 POC 所需的访问与验收样本
