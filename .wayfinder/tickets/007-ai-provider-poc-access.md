@@ -4,7 +4,9 @@ labels:
   - wayfinder:task
 parent: ../meal-diary-mvp-map.md
 status: open
-assignee: null
+assignee: root
+assets:
+  - ../prototypes/ai-service-poc-plan.md
 ---
 
 # 准备 AI 服务 POC 所需的访问与验收样本
