@@ -30,11 +30,11 @@ status: open
 - [验证餐食营养估算方案](./comments/003-nutrition-estimation-feasibility-resolution.md)：单图只能提供候选，营养值须由用户确认菜品/份量后基于授权成分表确定性重算。
 - [确定私密云端数据边界与合规要求](./comments/004-private-data-boundary-resolution.md)：境内最小化存储、明示微信隐私授权、AI 供应商受托且不训练、全量导出/删除和 AI 标识是 MVP 前置条件。
 - [绘制首页与餐食详情的可视原型](./comments/005-experience-prototype-resolution.md)：两栏导航、四个餐次卡位、图片优先的详情与次日全屏回顾，采用 Apple 风格加少量贴纸的视觉方向。
+- [决定 AI 结果、重试与人工修正的一致性规则](./comments/006-derived-data-consistency-resolution.md)：一餐仅保留最新风格图；用户确认的营养不被自动覆盖；替换或删除餐食时清除所有派生数据且任务不得回写。
 
 ## Not yet specified
 
 - AI 生成的单位成本、滥用防护、免费额度或订阅模式，待供应商与早期使用数据明确后决定。
-- 每日回顾的内容、生成时间和是否完全依赖营养分析，待核心记录流与营养能力明确后细化。
 - MVP 的验证指标、内测人群和发布节奏，待体验原型和服务成本明确后细化。
 
 ## Out of scope

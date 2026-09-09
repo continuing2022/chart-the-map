@@ -3,8 +3,8 @@ kind: issue
 labels:
   - wayfinder:grilling
 parent: ../meal-diary-mvp-map.md
-status: open
-assignee: null
+status: closed
+assignee: root
 blocked_by:
   - 002-image-stylization-feasibility.md
   - 003-nutrition-estimation-feasibility.md
