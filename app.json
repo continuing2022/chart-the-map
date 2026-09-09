@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/detail/index",
+    "pages/calendar/index",
+    "pages/settings/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "食光日记",
+    "navigationBarBackgroundColor": "#F7F7FA",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F7FA",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

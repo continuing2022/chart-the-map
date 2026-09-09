@@ -1,0 +1,13 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "meal-diary",
+  "description": "AI 饮食日记 MVP",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "setting": {
+    "es6": true,
+    "minified": false,
+    "postcss": true,
+    "urlCheck": false
+  }
+}

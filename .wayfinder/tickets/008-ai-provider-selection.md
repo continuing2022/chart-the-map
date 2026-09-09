@@ -4,7 +4,7 @@ labels:
   - wayfinder:grilling
 parent: ../meal-diary-mvp-map.md
 status: open
-assignee: null
+assignee: root
 blocked_by:
   - 007-ai-provider-poc-access.md
 ---
