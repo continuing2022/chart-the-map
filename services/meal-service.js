@@ -317,6 +317,46 @@ function getDayInsight(dateKey) {
   return { recordedMeals: allRecords.length, confirmedMeals: records.length, suggestions, isEstimate: true }
 }
 
+function getDayRecap(dateKey) {
+  finishPendingRecords()
+  const records = getRecords(dateKey)
+  const totals = { calories: 0, protein: 0, fat: 0, carbs: 0 }
+  let analyzedMeals = 0
+  let confirmedMeals = 0
+
+  records.forEach((record) => {
+    if (!record.nutrition) return
+    analyzedMeals += 1
+    if (record.manuallyConfirmed) confirmedMeals += 1
+    Object.keys(totals).forEach((key) => {
+      totals[key] += Number(record.nutrition[key]) || 0
+    })
+  })
+
+  const insight = getDayInsight(dateKey)
+  return {
+    dateKey,
+    records,
+    recordedMeals: records.length,
+    analyzedMeals,
+    confirmedMeals,
+    totals,
+    suggestions: insight.suggestions,
+    isEstimate: true
+  }
+}
+
+function shouldShowAutomaticRecap(todayDateKey, recapDateKey) {
+  const state = readState()
+  return state.lastAutomaticRecapDateKey !== todayDateKey && state.records.some((record) => record.dateKey === recapDateKey)
+}
+
+function markAutomaticRecapShown(todayDateKey) {
+  const state = readState()
+  state.lastAutomaticRecapDateKey = todayDateKey
+  writeState(state)
+}
+
 function getDatesWithRecords() {
   return [...new Set(readState().records.map((record) => record.dateKey))].sort().reverse()
 }
@@ -339,15 +379,18 @@ module.exports = {
   failTask,
   finishPendingRecords,
   getDatesWithRecords,
+  getDayRecap,
   getDayInsight,
   getRecord,
   getRecordById,
   getRecords,
   getSlots,
   getStylePreference,
+  markAutomaticRecapShown,
   retryNutrition,
   retryStylization,
   setStylePreference,
+  shouldShowAutomaticRecap,
   updateRecord,
   _test: { LEGACY_STORAGE_KEY, MOCK_DELAY_MS, STORAGE_KEY, normalizeState, recalculateNutrition }
 }

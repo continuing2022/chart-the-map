@@ -1,1 +1,31 @@
-<view class="page safe-bottom"><view class="title">日历</view><view class="subtitle">每一餐，都是生活的一小段回忆。</view><view wx:if="{{!days.length}}" class="empty"><view class="empty-icon">✦</view><view>还没有记录</view><view class="empty-sub">回到“今天”，从第一餐开始吧。</view></view><view wx:for="{{days}}" wx:key="dateKey" class="day-card"><view class="day-title">{{item.label}}</view><view wx:for="{{item.slots}}" wx:key="key" wx:for-item="slot" class="history-row" bindtap="openDetail" data-id="{{slot.record.id}}"><image wx:if="{{slot.record}}" class="thumb" src="{{slot.record.stylizedImage || slot.record.imagePath}}" mode="aspectFill" /><view wx:else class="thumb placeholder">＋</view><view class="history-label">{{slot.emoji}} {{slot.label}}</view><view class="muted">{{slot.record ? '已记录' : '未记录'}}</view></view></view></view>
+<view class="page safe-bottom">
+  <view class="title">日历</view>
+  <view class="subtitle">选一天回看，也可以为过去的日子补记一餐。</view>
+
+  <picker mode="date" value="{{selectedDateKey}}" end="{{todayKey}}" bindchange="chooseDate">
+    <view class="date-picker">
+      <view><view class="picker-label">正在查看</view><view class="picker-date">{{dateLabel}}</view></view>
+      <view class="picker-action">选择日期</view>
+    </view>
+  </picker>
+
+  <view class="day-card">
+    <view class="day-head">
+      <view class="day-title">四个餐次</view>
+      <view wx:if="{{hasRecords}}" class="recap-link" bindtap="openRecap">查看这天回顾</view>
+    </view>
+    <view wx:for="{{slots}}" wx:for-item="slot" wx:key="key" class="history-row {{slot.record ? '' : 'empty-row'}}" bindtap="chooseSource" data-slot="{{slot}}" data-id="{{slot.record.id}}">
+      <image wx:if="{{slot.record}}" class="thumb" src="{{slot.record.stylizedImage || slot.record.imagePath}}" mode="aspectFill" />
+      <view wx:else class="thumb placeholder">＋</view>
+      <view class="history-label">{{slot.emoji}} {{slot.label}}</view>
+      <view class="muted">{{slot.record ? '已记录' : '补记'}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{recordedDates.length}}" class="recorded-section">
+    <view class="recorded-title">有记录的日子</view>
+    <view class="date-list">
+      <view wx:for="{{recordedDates}}" wx:key="dateKey" class="date-chip {{item.dateKey === selectedDateKey ? 'selected' : ''}}" data-date-key="{{item.dateKey}}" bindtap="selectRecordedDate">{{item.label}}</view>
+    </view>
+  </view>
+</view>

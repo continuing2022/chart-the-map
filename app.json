@@ -3,6 +3,7 @@
     "pages/home/index",
     "pages/detail/index",
     "pages/calendar/index",
+    "pages/recap/index",
     "pages/settings/index"
   ],
   "window": {

@@ -1,0 +1,20 @@
+.page { padding: 58rpx 32rpx 70rpx; text-align: center; }
+.sparkle { margin: 0 auto 18rpx; width: 72rpx; height: 72rpx; display: flex; align-items: center; justify-content: center; border-radius: 24rpx; background: #fabf00; font-size: 38rpx; }
+.eyebrow { color: #9a6200; font-size: 23rpx; letter-spacing: 4rpx; }
+.title { margin-top: 8rpx; font-size: 50rpx; font-weight: 700; letter-spacing: -2rpx; }
+.date { margin-top: 10rpx; color: #8e8e93; font-size: 24rpx; }
+.photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12rpx; margin-top: 34rpx; }
+.recap-photo { width: 100%; height: 260rpx; border-radius: 28rpx; background: rgba(250,230,83,.24); }
+.photos-1 { grid-template-columns: 1fr; }
+.photos-1 .recap-photo { height: 480rpx; }
+.photos-3 .recap-photo:first-child { grid-row: span 2; height: 532rpx; }
+.summary-card,.nutrition-card,.guidance-card { margin-top: 22rpx; padding: 28rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 10rpx 28rpx rgba(250,160,0,.07); text-align: left; }
+.summary-card { display: flex; align-items: center; background: rgba(250,230,83,.34); }
+.summary-number { margin-right: 22rpx; min-width: 68rpx; font-size: 58rpx; font-weight: 700; }
+.summary-title,.card-title { font-size: 28rpx; font-weight: 700; }
+.summary-copy { margin-top: 7rpx; color: #6e6e73; font-size: 22rpx; line-height: 1.5; }
+.calories { margin-top: 22rpx; font-size: 38rpx; font-weight: 700; }
+.macros { margin-top: 9rpx; color: #606066; font-size: 23rpx; }
+.guidance { margin-top: 18rpx; padding-left: 18rpx; border-left: 5rpx solid #fabf00; color: #4d4d52; font-size: 25rpx; line-height: 1.55; }
+.disclaimer { margin-top: 16rpx; color: #9d9da3; font-size: 20rpx; line-height: 1.5; }
+.close-button { margin-top: 28rpx; padding: 21rpx; border-radius: 24rpx; background: #fabf00; color: #1d1d1f; font-size: 27rpx; font-weight: 600; }

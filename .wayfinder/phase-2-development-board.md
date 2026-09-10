@@ -3,20 +3,20 @@
 - Goal: 将第一阶段的本地演示骨架升级为可稳定使用、可验证、可平滑接入腾讯云真实服务的微信小程序核心版本。
 - Success Criteria: 照片本地持久保存；替换和删除会清理派生数据；异步任务不会覆盖已删除、已替换或人工确认的记录；历史日期可补记；每日回顾可查看；云端服务具备明确且不泄露密钥的客户端边界；核心规则有自动化验证。
 - Canonical Artifact: 微信小程序源码与 `services/meal-service.js` 服务边界
-- Updated At: 2026-09-09 22:43
+- Updated At: 2026-09-10 00:18
 - Overall Status: review
-- Next Action: 用户在微信开发者工具验收第一批增量；通过后开始历史补记与每日回顾。
+- Next Action: 用户复核第三阶段体验；通过后开始 T05 真实云服务适配层。
 
 ## Task Index
 
 | ID | Title | Priority | Status | Owner | Dependencies |
 | --- | --- | --- | --- | --- | --- |
 | T01 | 明确第二阶段服务边界与状态模型 | P0 | done | main | none |
-| T02 | 实现照片持久化和替换/删除清理 | P0 | review | main | T01 |
+| T02 | 实现照片持久化和替换/删除清理 | P0 | done | main | T01 |
 | T03 | 实现安全的异步任务与人工确认保护 | P0 | done | main | T01 |
-| T04 | 补齐历史补记和每日回顾闭环 | P1 | todo | main | T02, T03 |
+| T04 | 补齐历史补记和每日回顾闭环 | P1 | done | main | T02, T03 |
 | T05 | 建立真实云服务适配层和配置说明 | P1 | todo | main | T01 |
-| T06 | 自动化测试与微信开发者工具验收 | P0 | todo | main | T02, T03, T04, T05 |
+| T06 | 自动化测试与微信开发者工具验收 | P0 | review | main | T02, T03, T04, T05 |
 
 ## Shared Context
 
@@ -54,11 +54,11 @@
 
 - Context: `wx.chooseImage` 返回临时路径，当前记录可能在重启或系统清理后丢图，替换/删除也没有清理本地保存文件。
 - Priority: P0
-- Status: review
+- Status: done
 - Owner: main
 - Dependencies: T01
 - Deliverable: 新照片通过 `wx.saveFile` 持久化；替换或删除后安全清理不再引用的本地文件。
-- Last Updated: 2026-09-09 22:43
+- Last Updated: 2026-09-10 00:18
 
 ### Execution Notes
 
@@ -70,10 +70,11 @@
 
 - 2026-09-09 22:33 任务已创建。
 - 2026-09-09 22:43 已接入 `wx.saveFile` 持久化和受控的 `wx.removeSavedFile` 清理；详情页新增替换照片入口。
+- 2026-09-10 00:03 已通过开发者工具真实文件选择器上传桌面 `饭.png`（553,491 字节），保存路径从临时地址转换为小程序持久文件地址且记录标记为受管文件。
 
 ### Completion Evidence
 
-- 文件存储单元测试通过；仍需在微信开发者工具验证重启后的真实文件生命周期。
+- 文件存储单元测试通过；开发者工具真实相册选择、`wx.saveFile` 和持久文件展示通过。
 
 ## Task T03: 实现安全的异步任务与人工确认保护
 
@@ -104,11 +105,11 @@
 
 - Context: 路线图要求历史日期补记和次日首次打开的每日回顾，当前日历只能查看已有记录，首页回顾只是跳转提示。
 - Priority: P1
-- Status: todo
+- Status: done
 - Owner: main
 - Dependencies: T02, T03
 - Deliverable: 可选择历史日期的日视图/补记入口，以及可关闭且每天只自动出现一次的前日回顾。
-- Last Updated: 2026-09-09 22:33
+- Last Updated: 2026-09-10 00:18
 
 ### Execution Notes
 
@@ -119,10 +120,11 @@
 ### Progress Log
 
 - 2026-09-09 22:33 任务已创建。
+- 2026-09-10 00:18 已完成历史日期选择、空餐次补记、已记录日期快捷入口、独立每日回顾、昨日首次自动展示及当天防重复展示。
 
 ### Completion Evidence
 
-- 待补充。
+- 自动化测试覆盖每日回顾汇总与自动展示状态；开发者工具用真实图片完成 9 月 9 日午餐历史补记，页面状态确认 1 餐、620 kcal 汇总正确。
 
 ## Task T05: 建立真实云服务适配层和配置说明
 
@@ -152,11 +154,11 @@
 
 - Context: 数据一致性是上线前高风险面，且部分文件系统/API 行为只能在微信运行时验证。
 - Priority: P0
-- Status: todo
+- Status: review
 - Owner: main
 - Dependencies: T02, T03, T04, T05
 - Deliverable: 可本地运行的核心服务测试、静态检查，以及微信开发者工具手工验收清单。
-- Last Updated: 2026-09-09 22:33
+- Last Updated: 2026-09-10 00:18
 
 ### Execution Notes
 
@@ -167,18 +169,20 @@
 ### Progress Log
 
 - 2026-09-09 22:33 任务已创建。
+- 2026-09-10 00:18 Node 核心测试增至 9 项并全部通过；页面语法检查通过；开发者工具自动化 API 验证首页、日历、回顾页路由和真实图片上传。
 
 ### Completion Evidence
 
-- 待补充。
+- `npm test` 9/9 通过；`npm run check` 通过；开发者工具真实图片上传、持久化状态、历史餐次渲染、昨日回顾汇总和首次自动打开通过。替换、删除和真实设备相机流程仍建议发布前人工复核。
 
 ## Global Progress Log
 
 - 2026-09-09 22:33 第二阶段执行板已创建；当前不依赖用户提供密钥即可开始 T01-T03。
 - 2026-09-09 22:43 第一批增量实现完成；7 项自动化测试与 JavaScript 语法检查通过，等待微信开发者工具手工验收。
+- 2026-09-10 00:18 第三阶段历史补记与每日回顾完成；真实上传测试期间发现并修复日历循环变量渲染缺失、首页初次路由竞争两个运行时问题。
 
 ## Final Closure
 
-- Delivered: 第一批增量已交付照片持久化、受控清理、异步一致性和人工确认保护。
-- Verified By: `npm test` 7/7 通过；`npm run check` 通过。
-- Remaining Follow-ups: 微信运行时手工验收；T04 历史补记/每日回顾；T05 真实后端适配与域名配置。
+- Delivered: 已交付照片持久化、受控清理、异步一致性、人工确认保护、历史补记和每日回顾闭环。
+- Verified By: `npm test` 9/9 通过；`npm run check` 通过；微信开发者工具真实桌面图片上传与运行时页面状态通过。
+- Remaining Follow-ups: T05 真实后端适配与域名配置；发布前复核真实设备相机、替换和删除流程。

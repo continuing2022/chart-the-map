@@ -8,13 +8,13 @@
     <view class="settings" bindtap="openSettings">⚙</view>
   </view>
 
-  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card">
+  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card" bindtap="openYesterdayRecap">
     <view class="recap-icon">✦</view>
     <view class="recap-copy">
       <view class="recap-title">昨天的食光已收藏</view>
       <view class="recap-body">记录了 {{yesterdayInsight.recordedMeals}} 餐，点进日历随时回看。</view>
     </view>
-    <view class="recap-arrow" bindtap="openCalendar">›</view>
+    <view class="recap-arrow">›</view>
   </view>
 
   <view class="section-title">今天吃了什么</view>

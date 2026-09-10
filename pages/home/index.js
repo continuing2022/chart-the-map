@@ -11,7 +11,23 @@ Page({
   },
 
   onShow() {
+    this.openingAutomaticRecap = false
     this.refresh()
+    if (this.pageReady) this.scheduleAutomaticRecap()
+  },
+
+  onReady() {
+    this.pageReady = true
+    this.scheduleAutomaticRecap()
+  },
+
+  onHide() {
+    clearTimeout(this.recapTimer)
+  },
+
+  scheduleAutomaticRecap() {
+    clearTimeout(this.recapTimer)
+    this.recapTimer = setTimeout(() => this.maybeOpenAutomaticRecap(), 300)
   },
 
   refresh() {
@@ -22,6 +38,17 @@ Page({
       dateLabel: displayDate(todayKey),
       slots: mealService.getSlots(todayKey),
       yesterdayInsight: mealService.getDayInsight(yesterdayKey())
+    })
+  },
+
+  maybeOpenAutomaticRecap() {
+    const todayKey = toDateKey(new Date())
+    const recapDateKey = yesterdayKey()
+    if (this.openingAutomaticRecap || !mealService.shouldShowAutomaticRecap(todayKey, recapDateKey)) return
+    this.openingAutomaticRecap = true
+    wx.navigateTo({
+      url: `/pages/recap/index?dateKey=${recapDateKey}&automatic=1`,
+      fail: () => { this.openingAutomaticRecap = false }
     })
   },
 
@@ -78,6 +105,10 @@ Page({
 
   openCalendar() {
     wx.navigateTo({ url: '/pages/calendar/index' })
+  },
+
+  openYesterdayRecap() {
+    wx.navigateTo({ url: `/pages/recap/index?dateKey=${yesterdayKey()}` })
   },
 
   openSettings() {

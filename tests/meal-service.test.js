@@ -118,6 +118,30 @@ test('daily guidance stays silent until nutrition is explicitly confirmed', () =
   assert.ok(mealService.getDayInsight('2026-09-09').suggestions.length > 0)
 })
 
+test('daily recap aggregates available estimates and reports confirmation coverage', () => {
+  const breakfast = mealService.createRecord({ dateKey: '2026-09-08', slotKey: 'breakfast', imagePath: 'saved-a' }).record
+  const lunch = mealService.createRecord({ dateKey: '2026-09-08', slotKey: 'lunch', imagePath: 'saved-b' }).record
+  mealService.finishPendingRecords(Math.max(breakfast.createdAt, lunch.createdAt) + MOCK_DELAY_MS)
+  mealService.changePortion(breakfast.id, 0, '标准')
+
+  const recap = mealService.getDayRecap('2026-09-08')
+  assert.equal(recap.recordedMeals, 2)
+  assert.equal(recap.analyzedMeals, 2)
+  assert.equal(recap.confirmedMeals, 1)
+  assert.equal(recap.totals.calories, 1030)
+  assert.ok(recap.suggestions.length > 0)
+})
+
+test('automatic recap appears once per opening date and only when yesterday has records', () => {
+  assert.equal(mealService.shouldShowAutomaticRecap('2026-09-09', '2026-09-08'), false)
+  mealService.createRecord({ dateKey: '2026-09-08', slotKey: 'dinner', imagePath: 'saved-a' })
+  assert.equal(mealService.shouldShowAutomaticRecap('2026-09-09', '2026-09-08'), true)
+
+  mealService.markAutomaticRecapShown('2026-09-09')
+  assert.equal(mealService.shouldShowAutomaticRecap('2026-09-09', '2026-09-08'), false)
+  assert.equal(mealService.shouldShowAutomaticRecap('2026-09-10', '2026-09-09'), false)
+})
+
 test('persists selected images and only removes managed files', async () => {
   const removed = []
   global.wx.saveFile = ({ tempFilePath, success }) => success({ savedFilePath: `saved:${tempFilePath}` })

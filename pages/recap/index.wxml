@@ -1,0 +1,30 @@
+<view wx:if="{{recap}}" class="page safe-bottom">
+  <view class="sparkle">✦</view>
+  <view class="eyebrow">每日回顾</view>
+  <view class="title">这一天的食光</view>
+  <view class="date">{{dateLabel}}</view>
+
+  <view class="photo-grid photos-{{recap.recordedMeals}}">
+    <image wx:for="{{recap.records}}" wx:key="id" class="recap-photo" src="{{item.stylizedImage || item.imagePath}}" mode="aspectFill" data-id="{{item.id}}" bindtap="openDetail" />
+  </view>
+
+  <view class="summary-card">
+    <view class="summary-number">{{recap.recordedMeals}}</view>
+    <view><view class="summary-title">餐被轻轻收藏</view><view class="summary-copy">不必连续，也不必完美。记下来的就是生活。</view></view>
+  </view>
+
+  <view wx:if="{{recap.analyzedMeals}}" class="nutrition-card">
+    <view class="card-title">当日估算汇总</view>
+    <view class="calories">约 {{recap.totals.calories}} kcal</view>
+    <view class="macros">蛋白质 {{recap.totals.protein}}g · 脂肪 {{recap.totals.fat}}g · 碳水 {{recap.totals.carbs}}g</view>
+    <view class="disclaimer">汇总来自 {{recap.analyzedMeals}} 餐图片估算，其中 {{recap.confirmedMeals}} 餐已人工确认，仅供记录参考。</view>
+  </view>
+
+  <view wx:if="{{recap.suggestions.length}}" class="guidance-card">
+    <view class="card-title">给下一餐的小提示</view>
+    <view wx:for="{{recap.suggestions}}" wx:key="*this" class="guidance">{{item}}</view>
+    <view class="disclaimer">只依据你主动确认的食物类别，不是健康评分或医疗建议。</view>
+  </view>
+
+  <button class="close-button" bindtap="close">收下这份回忆</button>
+</view>
