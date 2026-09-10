@@ -1,31 +1,69 @@
-<view class="page safe-bottom">
-  <view class="title">日历</view>
-  <view class="subtitle">选一天回看，也可以为过去的日子补记一餐。</view>
-
-  <picker mode="date" value="{{selectedDateKey}}" end="{{todayKey}}" bindchange="chooseDate">
-    <view class="date-picker">
-      <view><view class="picker-label">正在查看</view><view class="picker-date">{{dateLabel}}</view></view>
-      <view class="picker-action">选择日期</view>
+<view class="page {{showEmptyState ? 'is-empty' : ''}}">
+  <view class="calendar-header">
+    <view class="header-copy">
+      <view class="title">日历</view>
+      <view class="subtitle">每一餐，都是生活的一小段回忆</view>
     </view>
-  </picker>
+    <picker mode="date" value="{{selectedDateKey}}" end="{{todayKey}}" bindchange="chooseDate">
+      <view class="calendar-button tap-target" hover-class="tap-soft" aria-label="选择具体日期">
+        <view class="calendar-glyph">
+          <view class="calendar-rings"><text></text><text></text></view>
+          <view class="calendar-grid"><text></text><text></text><text></text><text></text><text></text><text></text></view>
+        </view>
+      </view>
+    </picker>
+  </view>
 
-  <view class="day-card">
-    <view class="day-head">
-      <view class="day-title">四个餐次</view>
-      <view wx:if="{{hasRecords}}" class="recap-link" bindtap="openRecap">查看这天回顾</view>
-    </view>
-    <view wx:for="{{slots}}" wx:for-item="slot" wx:key="key" class="history-row {{slot.record ? '' : 'empty-row'}}" bindtap="chooseSource" data-slot="{{slot}}" data-id="{{slot.record.id}}">
-      <image wx:if="{{slot.record}}" class="thumb" src="{{slot.record.stylizedImage || slot.record.imagePath}}" mode="aspectFill" />
-      <view wx:else class="thumb placeholder">＋</view>
-      <view class="history-label">{{slot.emoji}} {{slot.label}}</view>
-      <view class="muted">{{slot.record ? '已记录' : '补记'}}</view>
+  <view class="month-nav">
+    <view class="month-control tap-target" hover-class="tap-soft" bindtap="showPreviousMonth" aria-label="上一个月">‹</view>
+    <picker class="month-picker" mode="date" fields="month" value="{{selectedMonthKey}}-01" end="{{todayKey}}" bindchange="chooseMonth">
+      <view class="month-label tap-target" hover-class="tap-soft">{{monthLabel}}</view>
+    </picker>
+    <view class="month-control {{canGoNextMonth ? '' : 'disabled'}} tap-target" hover-class="{{canGoNextMonth ? 'tap-soft' : ''}}" bindtap="showNextMonth" aria-label="下一个月">›</view>
+  </view>
+
+  <view wx:if="{{days.length}}" class="day-list">
+    <view wx:for="{{days}}" wx:for-item="day" wx:key="dateKey" class="day-card">
+      <view class="day-head">
+        <view class="day-date">
+          <text class="day-title">{{day.dateTitle}}</text>
+          <text class="weekday">{{day.weekdayLabel}}</text>
+        </view>
+        <view wx:if="{{day.hasRecords}}" class="day-note tap-target" hover-class="tap-soft" catchtap="openRecap" data-date-key="{{day.dateKey}}">{{day.note}}</view>
+        <view wx:else class="day-note">为这天留下一点食光</view>
+      </view>
+
+      <view class="meal-grid">
+        <view wx:for="{{day.slots}}" wx:for-item="slot" wx:key="key" class="meal-slot tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}" data-date-key="{{day.dateKey}}" data-id="{{slot.record ? slot.record.id : ''}}">
+          <image wx:if="{{slot.record}}" class="thumb" src="{{slot.imageSource}}" mode="aspectFill" />
+          <view wx:else class="thumb placeholder placeholder-{{slot.accent}}"><text>{{slot.icon}}</text></view>
+          <view class="meal-label">{{slot.label}}</view>
+          <view class="meal-status {{slot.record ? 'recorded' : ''}}">{{slot.record ? '已记录' : '未记录'}}</view>
+        </view>
+      </view>
     </view>
   </view>
 
-  <view wx:if="{{recordedDates.length}}" class="recorded-section">
-    <view class="recorded-title">有记录的日子</view>
-    <view class="date-list">
-      <view wx:for="{{recordedDates}}" wx:key="dateKey" class="date-chip {{item.dateKey === selectedDateKey ? 'selected' : ''}}" data-date-key="{{item.dateKey}}" bindtap="selectRecordedDate">{{item.label}}</view>
+  <view wx:if="{{showEmptyState}}" class="empty-state">
+    <view class="empty-art" aria-hidden="true">
+      <view class="star star-one">✦</view>
+      <view class="star star-two">✦</view>
+      <view class="star star-three">✦</view>
+      <view class="plant"><view class="stem"></view><view class="leaf leaf-one"></view><view class="leaf leaf-two"></view><view class="leaf leaf-three"></view></view>
+      <view class="cat-tail"></view>
+      <view class="cat">
+        <view class="ear left-ear"></view><view class="ear right-ear"></view>
+        <view class="cat-face"><text class="eye left-eye">•</text><text class="eye right-eye">•</text><text class="cat-mouth">ᴗ</text></view>
+        <view class="cat-cheek left-cheek"></view><view class="cat-cheek right-cheek"></view>
+      </view>
+      <view class="box"><view class="box-fold left-fold"></view><view class="box-fold right-fold"></view></view>
     </view>
+    <view class="empty-copy">还没有记录，<br />回到「今天」，从第一餐开始吧。</view>
+    <button class="today-button" hover-class="today-button-active" bindtap="backToToday">回到今天</button>
+  </view>
+
+  <view class="tabbar">
+    <view class="tab" hover-class="tab-pressed" bindtap="backToToday"><text class="tab-icon">⌂</text><text>今天</text></view>
+    <view class="tab active"><text class="tab-icon calendar-tab-icon">▦</text><text>日历</text></view>
   </view>
 </view>
