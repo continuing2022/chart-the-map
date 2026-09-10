@@ -1,49 +1,72 @@
 <view class="page safe-bottom">
-  <view class="topbar">
-    <view>
-      <view class="eyebrow">AI 饮食日记</view>
-      <view class="title">食光日记</view>
-      <view class="date">{{dateLabel}}</view>
+  <view class="brand-row">
+    <view class="brand-block">
+      <view class="brand-title">食光日记<text class="brand-rays">✶</text></view>
+      <view class="brand-underline"></view>
+      <view class="brand-subtitle">AI 饮食日记</view>
     </view>
-    <view class="settings" bindtap="openSettings">⚙</view>
+    <view class="settings tap-target" hover-class="tap-soft" bindtap="openSettings" aria-label="打开设置">
+      <view class="settings-icon">⚙</view>
+    </view>
   </view>
 
-  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card" bindtap="openYesterdayRecap">
-    <view class="recap-icon">✦</view>
+  <view class="day-overview">
+    <view class="day-copy">
+      <view class="date-line">
+        <text class="date-title">{{dateTitle}}</text>
+        <text class="weekday">{{weekdayLabel}}</text>
+      </view>
+      <view class="greeting"><text class="greeting-sun">☀</text>{{greeting}}</view>
+    </view>
+    <view class="weather-art" aria-hidden="true">☀</view>
+  </view>
+
+  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card tap-card" hover-class="tap-card-active" bindtap="openYesterdayRecap">
     <view class="recap-copy">
-      <view class="recap-title">昨天的食光已收藏</view>
-      <view class="recap-body">记录了 {{yesterdayInsight.recordedMeals}} 餐，点进日历随时回看。</view>
+      <view class="recap-title">昨天的食光已收藏，</view>
+      <view class="recap-body">记录了 {{yesterdayInsight.recordedMeals}} 餐，点进日历随时回看</view>
     </view>
     <view class="recap-arrow">›</view>
+    <view class="recap-mascot" aria-hidden="true">🐱<text>♡</text></view>
   </view>
 
-  <view class="section-title">今天吃了什么</view>
-  <view class="slot-list">
+  <view class="section-heading">
+    <view class="section-title">今天吃了什么</view>
+    <view class="section-note">记录一餐，<text>♡</text><br />收藏一点生活的温柔</view>
+  </view>
+
+  <view class="slot-list {{hasRecords ? 'is-mixed' : 'is-grid'}}">
     <view wx:for="{{slots}}" wx:key="key" class="meal-card {{slot.record ? 'filled' : 'empty'}}">
-      <view class="slot-heading">
-        <view class="slot-name">{{slot.emoji}} {{slot.label}}</view>
-        <view wx:if="{{slot.record && slot.record.stylizationTask.status === 'processing'}}" class="status">正在绘制</view>
-        <view wx:elif="{{slot.record && slot.record.nutritionTask.status === 'processing'}}" class="status">正在分析</view>
-        <view wx:elif="{{slot.record && (slot.record.stylizationTask.status === 'failed' || slot.record.nutritionTask.status === 'failed')}}" class="status error">需要重试</view>
-      </view>
-      <view wx:if="{{slot.record}}" class="record-row" bindtap="openDetail" data-id="{{slot.record.id}}">
-        <image class="meal-image" src="{{slot.record.stylizedImage || slot.record.imagePath}}" mode="aspectFill" />
+      <view wx:if="{{slot.record}}" class="record-row tap-card" hover-class="tap-card-active" bindtap="openDetail" data-id="{{slot.record.id}}">
+        <image class="meal-image" src="{{slot.imageSource}}" mode="aspectFill" />
         <view class="record-copy">
-          <view class="record-title">{{slot.record.stylizationTask.status === 'completed' ? slot.record.style + '风格回忆' : '照片已保存'}}</view>
-          <view class="record-subtitle">{{slot.record.nutritionTask.status === 'completed' ? '营养估算已生成' : '你可以先离开，结果会自动回来'}}</view>
-          <view wx:if="{{slot.record.isMock}}" class="mock-badge">本地模拟</view>
+          <view class="record-heading">
+            <view class="record-title">{{slot.label}}</view>
+            <view class="more-button tap-target" hover-class="tap-soft" catchtap="showRecordActions" data-slot="{{slot}}" aria-label="{{slot.label}}更多操作">•••</view>
+          </view>
+          <view wx:for="{{slot.statusLines}}" wx:for-item="line" wx:key="text" class="status-line status-{{line.state}}">
+            <view class="status-mark">
+              <text wx:if="{{line.state === 'complete' || line.state === 'saved'}}">✓</text>
+              <text wx:elif="{{line.state === 'failed'}}">!</text>
+              <text wx:else>·</text>
+            </view>
+            <text>{{line.text}}</text>
+          </view>
+          <view wx:if="{{slot.record.isMock}}" class="mock-note">本地模拟</view>
         </view>
-        <view class="chevron">›</view>
       </view>
-      <view wx:else class="empty-row" bindtap="chooseSource" data-slot="{{slot}}">
-        <view class="plus">＋</view>
-        <view>点击记录{{slot.label}}</view>
+      <view wx:else class="empty-row tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}">
+        <view class="meal-icon icon-{{slot.accent}}">{{slot.icon}}</view>
+        <view class="empty-copy">
+          <view class="slot-name">{{slot.label}}</view>
+          <view class="empty-prompt"><view class="plus">+</view><text>点击记录{{slot.label}}</text></view>
+        </view>
       </view>
     </view>
   </view>
 
   <view class="tabbar">
-    <view class="tab active">今天</view>
-    <view class="tab" bindtap="openCalendar">日历</view>
+    <view class="tab active"><text class="tab-icon">⌂</text><text>今天</text></view>
+    <view class="tab" hover-class="tab-pressed" bindtap="openCalendar"><text class="tab-icon calendar-icon">▦</text><text>日历</text></view>
   </view>
 </view>

@@ -2,11 +2,67 @@ const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
 const { displayDate, toDateKey, yesterdayKey } = require('../../utils/date')
 
+const SLOT_PRESENTATION = {
+  breakfast: { icon: '☀', accent: 'sunrise' },
+  lunch: { icon: '♨', accent: 'lunch' },
+  dinner: { icon: '◒', accent: 'dinner' },
+  lateNight: { icon: '☾', accent: 'late-night' }
+}
+
+function todayPresentation(date = new Date()) {
+  const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+  const hour = date.getHours()
+  let greeting = '今天也要好好吃饭'
+  if (hour < 10) greeting = '早上好，记得吃早餐'
+  else if (hour >= 18) greeting = '晚上好，慢慢享用今天'
+  return {
+    dateTitle: `${date.getMonth() + 1}月${date.getDate()}日`,
+    weekdayLabel: weekdays[date.getDay()],
+    greeting
+  }
+}
+
+function taskLine(task, completedText, processingText, failedText) {
+  if (task.status === 'completed') return { text: completedText, state: 'complete' }
+  if (task.status === 'failed') return { text: failedText, state: 'failed' }
+  return { text: processingText, state: 'processing' }
+}
+
+function decorateSlot(slot) {
+  const presentation = SLOT_PRESENTATION[slot.key]
+  if (!slot.record) return { ...slot, ...presentation }
+  const { record } = slot
+  return {
+    ...slot,
+    ...presentation,
+    imageSource: record.stylizedImage || record.imagePath,
+    statusLines: [
+      taskLine(
+        record.stylizationTask,
+        `${record.style}风格回忆`,
+        '正在生成风格回忆',
+        '风格回忆生成失败'
+      ),
+      { text: '照片已保存', state: 'saved' },
+      taskLine(
+        record.nutritionTask,
+        '营养估算已生成',
+        '正在生成营养估算',
+        '营养估算失败，可重试'
+      )
+    ]
+  }
+}
+
 Page({
   data: {
     todayKey: toDateKey(new Date()),
     dateLabel: '',
+    dateTitle: '',
+    weekdayLabel: '',
+    greeting: '',
     slots: [],
+    hasRecords: false,
     yesterdayInsight: null
   },
 
@@ -31,12 +87,16 @@ Page({
   },
 
   refresh() {
-    const todayKey = toDateKey(new Date())
+    const now = new Date()
+    const todayKey = toDateKey(now)
     mealService.finishPendingRecords()
+    const slots = mealService.getSlots(todayKey).map(decorateSlot)
     this.setData({
       todayKey,
       dateLabel: displayDate(todayKey),
-      slots: mealService.getSlots(todayKey),
+      ...todayPresentation(now),
+      slots,
+      hasRecords: slots.some((slot) => Boolean(slot.record)),
       yesterdayInsight: mealService.getDayInsight(yesterdayKey())
     })
   },
@@ -53,7 +113,10 @@ Page({
   },
 
   chooseSource(event) {
-    const { slot } = event.currentTarget.dataset
+    this.promptChooseSource(event.currentTarget.dataset.slot)
+  },
+
+  promptChooseSource(slot) {
     wx.showActionSheet({
       itemList: ['拍照', '从相册选择'],
       success: (result) => {
@@ -63,6 +126,17 @@ Page({
           sourceType: result.tapIndex === 0 ? ['camera'] : ['album'],
           success: (imageResult) => this.saveImage(slot, imageResult.tempFilePaths[0])
         })
+      }
+    })
+  },
+
+  showRecordActions(event) {
+    const { slot } = event.currentTarget.dataset
+    wx.showActionSheet({
+      itemList: ['查看详情', '替换照片'],
+      success: (result) => {
+        if (result.tapIndex === 0) this.openRecord(slot.record.id)
+        if (result.tapIndex === 1) this.promptChooseSource(slot)
       }
     })
   },
@@ -100,7 +174,11 @@ Page({
   },
 
   openDetail(event) {
-    wx.navigateTo({ url: `/pages/detail/index?id=${event.currentTarget.dataset.id}` })
+    this.openRecord(event.currentTarget.dataset.id)
+  },
+
+  openRecord(recordId) {
+    wx.navigateTo({ url: `/pages/detail/index?id=${recordId}` })
   },
 
   openCalendar() {
