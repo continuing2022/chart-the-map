@@ -1,1 +1,126 @@
-<view class="page safe-bottom"><view class="title">设置</view><view class="subtitle">把日记调成你喜欢的样子。</view><view class="section"><view class="section-title">默认可爱风格</view><view class="style-list"><view wx:for="{{styles}}" wx:key="*this" data-style="{{item}}" bindtap="chooseStyle" class="style-pill {{selectedStyle === item ? 'selected' : ''}}">{{item}}</view></view><view class="hint">新记录会使用这里选择的风格；旧记录不会自动改变。</view></view><view class="section link-row" bindtap="showPrivacy"><view><view class="section-title">隐私与数据</view><view class="hint">记录默认私密，正式版支持导出与彻底删除。</view></view><view class="chevron">›</view></view><view class="footer">食光日记 · 本地演示版本</view></view>
+<view class="page safe-bottom">
+  <view class="subtitle">把日记调成你喜欢的样子</view>
+
+  <view class="section style-section">
+    <view class="section-heading">
+      <view class="section-icon palette-icon" aria-hidden="true">
+        <text class="palette-dot dot-one"></text>
+        <text class="palette-dot dot-two"></text>
+        <text class="palette-hole"></text>
+      </view>
+      <view class="section-title">默认可爱风格</view>
+    </view>
+
+    <view class="style-list">
+      <view
+        wx:for="{{styles}}"
+        wx:key="name"
+        class="style-card style-{{item.visual}} {{selectedStyle === item.name ? 'selected' : ''}}"
+        data-style="{{item.name}}"
+        bindtap="chooseStyle"
+        hover-class="style-card-pressed"
+        aria-role="radio"
+        aria-checked="{{selectedStyle === item.name}}"
+        aria-label="选择{{item.name}}风格"
+      >
+        <view class="style-art" aria-hidden="true">
+          <block wx:if="{{item.visual === 'illustration'}}">
+            <view class="cat-ear cat-ear-left"></view>
+            <view class="cat-ear cat-ear-right"></view>
+            <view class="cat-face">
+              <text class="cat-eye left">•</text>
+              <text class="cat-eye right">•</text>
+              <text class="cat-mouth">ᴗ</text>
+              <text class="cat-whisker whisker-left">≋</text>
+              <text class="cat-whisker whisker-right">≋</text>
+            </view>
+          </block>
+          <block wx:elif="{{item.visual === 'clay'}}">
+            <view class="bear-ear bear-ear-left"></view>
+            <view class="bear-ear bear-ear-right"></view>
+            <view class="bear-face">
+              <text class="bear-eye left">•</text>
+              <text class="bear-eye right">•</text>
+              <view class="bear-muzzle">ᴗ</view>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="girl-hair"></view>
+            <view class="girl-face">
+              <text class="girl-eye left">•</text>
+              <text class="girl-eye right">•</text>
+              <text class="girl-smile">⌣</text>
+              <text class="girl-cheek left"></text>
+              <text class="girl-cheek right"></text>
+            </view>
+          </block>
+        </view>
+        <view class="style-name">{{item.name}}</view>
+        <view wx:if="{{selectedStyle === item.name}}" class="selected-mark" aria-hidden="true">✓</view>
+      </view>
+    </view>
+
+    <view class="hint">新记录会使用这套风格，旧记录不会自动改变。</view>
+  </view>
+
+  <view class="section privacy-section">
+    <view class="section-heading privacy-heading">
+      <view class="section-heading-main">
+        <view class="section-icon lock-title-icon" aria-hidden="true">
+          <view class="lock-title-loop"></view>
+          <view class="lock-title-body"></view>
+        </view>
+        <view class="section-title">隐私与数据</view>
+      </view>
+      <view class="privacy-link" bindtap="showPrivacy" hover-class="privacy-link-pressed" aria-role="button" aria-label="查看隐私与数据说明">
+        查看说明<text>›</text>
+      </view>
+    </view>
+
+    <view class="privacy-list">
+      <view class="privacy-row">
+        <view class="row-icon row-lock" aria-hidden="true">
+          <view class="mini-lock-loop"></view>
+          <view class="mini-lock-body"><text></text></view>
+        </view>
+        <view class="row-copy">
+          <view class="row-title">默认私密，专属于你</view>
+          <view class="row-description">不会读取你的头像、昵称或手机号。</view>
+        </view>
+      </view>
+
+      <view class="privacy-row">
+        <view class="row-icon row-storage" aria-hidden="true">
+          <view class="storage-lid"></view>
+          <view class="storage-body"><text></text></view>
+        </view>
+        <view class="row-copy">
+          <view class="row-title">保存在本机</view>
+          <view class="row-description">记录与照片保存在微信小程序的本地空间。</view>
+        </view>
+      </view>
+
+      <view class="privacy-row">
+        <view class="row-icon row-manage" aria-hidden="true">
+          <view class="manage-clip"></view>
+          <view class="manage-board"><text>×</text></view>
+        </view>
+        <view class="row-copy">
+          <view class="row-title">数据管理</view>
+          <view class="row-description">可在详情页逐条删除；暂不支持导出或一键清空。</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer-art" aria-hidden="true">
+    <view class="footer-copy">你的食光，由你自己定义 <text>♡</text></view>
+    <view class="plant">
+      <view class="stem"></view>
+      <view class="leaf leaf-one"></view>
+      <view class="leaf leaf-two"></view>
+      <view class="leaf leaf-three"></view>
+      <view class="leaf leaf-four"></view>
+    </view>
+  </view>
+</view>

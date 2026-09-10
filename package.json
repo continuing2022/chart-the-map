@@ -3,6 +3,6 @@
   "private": true,
   "scripts": {
     "test": "node tests/meal-service.test.js",
-    "check": "node --check services/meal-service.js && node --check services/image-storage.js && node --check pages/home/index.js && node --check pages/calendar/index.js && node --check pages/recap/index.js && node --check pages/detail/index.js"
+    "check": "node --check services/meal-service.js && node --check services/image-storage.js && node --check pages/home/index.js && node --check pages/calendar/index.js && node --check pages/recap/index.js && node --check pages/detail/index.js && node --check pages/settings/index.js"
   }
 }
