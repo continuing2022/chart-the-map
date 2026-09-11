@@ -1,30 +1,87 @@
-<view wx:if="{{recap}}" class="page safe-bottom">
-  <view class="sparkle">✦</view>
-  <view class="eyebrow">每日回顾</view>
-  <view class="title">这一天的食光</view>
-  <view class="date">{{dateLabel}}</view>
-
-  <view class="photo-grid photos-{{recap.recordedMeals}}">
-    <image wx:for="{{recap.records}}" wx:key="id" class="recap-photo" src="{{item.stylizedImage || item.imagePath}}" mode="aspectFill" data-id="{{item.id}}" bindtap="openDetail" />
+<view wx:if="{{recap}}" class="page">
+  <view class="topbar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-row">
+      <view class="nav-action tap-target" hover-class="tap-soft" bindtap="close" aria-role="button" aria-label="关闭回顾">
+        <view class="close-icon"></view>
+      </view>
+      <view class="nav-copy">
+        <view class="nav-title">{{title}}</view>
+        <view class="nav-date"><text>{{dateLabel}}</text><text>{{weekdayLabel}}</text></view>
+      </view>
+      <view class="nav-spacer"></view>
+    </view>
   </view>
 
-  <view class="summary-card">
-    <view class="summary-number">{{recap.recordedMeals}}</view>
-    <view><view class="summary-title">餐被轻轻收藏</view><view class="summary-copy">不必连续，也不必完美。记下来的就是生活。</view></view>
-  </view>
+  <view class="content">
+    <view class="memory-heading" aria-label="认真吃饭的每一天，也值得被记住">
+      <view class="heading-line">认真吃饭的每一天，<text class="heading-ray">✦</text></view>
+      <view class="heading-line heading-line-two"><text class="heading-stroke"></text>也值得被记住 <text class="heading-heart">♡</text></view>
+    </view>
 
-  <view wx:if="{{recap.analyzedMeals}}" class="nutrition-card">
-    <view class="card-title">当日估算汇总</view>
-    <view class="calories">约 {{recap.totals.calories}} kcal</view>
-    <view class="macros">蛋白质 {{recap.totals.protein}}g · 脂肪 {{recap.totals.fat}}g · 碳水 {{recap.totals.carbs}}g</view>
-    <view class="disclaimer">汇总来自 {{recap.analyzedMeals}} 餐图片估算，其中 {{recap.confirmedMeals}} 餐已人工确认，仅供记录参考。</view>
-  </view>
+    <view class="photo-collage collage-{{recap.recordedMeals}}">
+      <image
+        wx:for="{{recap.records}}"
+        wx:for-item="record"
+        wx:key="id"
+        class="recap-photo {{record.photoClass}}"
+        src="{{record.imageSource}}"
+        mode="aspectFill"
+        data-id="{{record.id}}"
+        bindtap="openDetail"
+        hover-class="photo-pressed"
+        aria-role="button"
+        aria-label="查看这餐详情"
+      />
+      <view wx:if="{{collageNote}}" class="memory-note" aria-hidden="true">
+        <view class="note-tape"></view>
+        <text>{{collageNote}}</text>
+      </view>
+    </view>
 
-  <view wx:if="{{recap.suggestions.length}}" class="guidance-card">
-    <view class="card-title">给下一餐的小提示</view>
-    <view wx:for="{{recap.suggestions}}" wx:key="*this" class="guidance">{{item}}</view>
-    <view class="disclaimer">只依据你主动确认的食物类别，不是健康评分或医疗建议。</view>
-  </view>
+    <view class="summary-card">
+      <view class="summary-primary">
+        <view class="primary-metric meal-metric">
+          <view class="metric-icon bowl-icon" aria-hidden="true"><view class="bowl-lid"></view><view class="bowl-body"></view></view>
+          <view class="metric-value">{{recap.recordedMeals}}<text>餐</text></view>
+        </view>
+        <view class="metric-divider"></view>
+        <view class="primary-metric calorie-metric">
+          <view class="metric-icon fire-icon" aria-hidden="true">●</view>
+          <view wx:if="{{recap.analyzedMeals}}" class="metric-value">{{recap.totals.calories}}<text>kcal</text></view>
+          <view wx:else class="metric-pending">营养估算准备中</view>
+        </view>
+      </view>
 
-  <button class="close-button" bindtap="close">收下这份回忆</button>
+      <block wx:if="{{recap.analyzedMeals}}">
+        <view class="summary-rule"></view>
+        <view class="macro-list">
+          <view class="macro-item protein-item"><view class="macro-dot">●</view><view>{{recap.totals.protein}}<text>g</text></view></view>
+          <view class="macro-item fat-item"><view class="macro-dot">◆</view><view>{{recap.totals.fat}}<text>g</text></view></view>
+          <view class="macro-item carbs-item"><view class="macro-dot">●</view><view>{{recap.totals.carbs}}<text>g</text></view></view>
+        </view>
+        <view class="coverage">汇总来自 {{recap.analyzedMeals}} 餐图片估算，其中 {{recap.confirmedMeals}} 餐已人工确认，仅供记录参考。</view>
+      </block>
+      <view wx:else class="coverage pending-copy">目前只汇总已完成的营养估算，稍后可以再回来看看。</view>
+    </view>
+
+    <view class="guidance-card">
+      <view class="plant-art" aria-hidden="true">
+        <view class="plant-stem"></view>
+        <view class="plant-leaf leaf-one"></view>
+        <view class="plant-leaf leaf-two"></view>
+        <view class="plant-leaf leaf-three"></view>
+      </view>
+      <view class="guidance-copy">
+        <view class="guidance-title">饮食小建议</view>
+        <block wx:if="{{recap.suggestions.length}}">
+          <view wx:for="{{recap.suggestions}}" wx:key="*this" class="guidance-text">{{item}}</view>
+        </block>
+        <view wx:else class="guidance-text">确认过菜品与份量后，这里会出现温和的下一餐建议。</view>
+        <view class="guidance-disclaimer">只依据你主动确认的食物类别，不是健康评分或医疗建议。</view>
+      </view>
+    </view>
+
+    <button class="primary-button" hover-class="primary-button-pressed" bindtap="openDateRecords">{{primaryActionLabel}}</button>
+    <button class="secondary-button" hover-class="secondary-button-pressed" bindtap="close">{{secondaryActionLabel}}</button>
+  </view>
 </view>

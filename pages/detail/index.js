@@ -2,11 +2,46 @@ const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
 const { displayDate } = require('../../utils/date')
 
+const SLOT_LABELS = {
+  breakfast: '早餐',
+  lunch: '午餐',
+  dinner: '晚餐',
+  lateNight: '夜宵'
+}
+
+const FOOD_ICONS = {
+  grain: '🍚',
+  vegetable: '🥬',
+  protein: '🥚',
+  fruit: '🍎'
+}
+
+function decorateNutrition(nutrition) {
+  if (!nutrition) return null
+  return {
+    ...nutrition,
+    items: nutrition.items.map((item) => ({
+      ...item,
+      icon: FOOD_ICONS[item.group] || '🍲'
+    }))
+  }
+}
+
 Page({
-  data: { record: null, dateLabel: '', showOriginal: false, portions: ['少', '标准', '多'] },
+  data: {
+    record: null,
+    dateLabel: '',
+    slotLabel: '',
+    statusBarHeight: 20,
+    showOriginal: false,
+    noteEditing: false,
+    portions: ['少', '标准', '多']
+  },
 
   onLoad(query) {
     this.recordId = query.id
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    this.setData({ statusBarHeight: windowInfo.statusBarHeight || 20 })
   },
 
   onShow() { this.refresh() },
@@ -17,13 +52,40 @@ Page({
     mealService.finishPendingRecords()
     const record = mealService.getRecordById(this.recordId)
     if (!record) return wx.navigateBack()
-    this.setData({ record, dateLabel: displayDate(record.dateKey) })
+    this.setData({
+      record: {
+        ...record,
+        nutrition: decorateNutrition(record.nutrition),
+        nutritionCandidate: decorateNutrition(record.nutritionCandidate)
+      },
+      dateLabel: displayDate(record.dateKey),
+      slotLabel: SLOT_LABELS[record.slotKey] || '餐食详情',
+      showOriginal: record.stylizationTask.status === 'completed' ? this.data.showOriginal : true
+    })
   },
 
-  toggleImage() { this.setData({ showOriginal: !this.data.showOriginal }) },
+  showStylizedImage() {
+    if (this.data.record.stylizationTask.status !== 'completed') return
+    this.setData({ showOriginal: false })
+  },
+
+  showOriginalImage() { this.setData({ showOriginal: true }) },
+
+  startNoteEdit() { this.setData({ noteEditing: true }) },
 
   saveNote(event) {
     mealService.updateRecord(this.recordId, { note: event.detail.value.slice(0, 50) })
+    this.setData({ noteEditing: false })
+    this.refresh()
+  },
+
+  showNutritionInfo() {
+    wx.showModal({
+      title: '关于营养估算',
+      content: '营养结果基于照片和你选择的份量估算，仅供饮食记录参考，不构成医疗健康建议。',
+      showCancel: false,
+      confirmText: '知道了'
+    })
   },
 
   changePortion(event) {
@@ -35,7 +97,10 @@ Page({
   retryStylization() {
     mealService.retryStylization(this.recordId)
     this.refresh()
-    setTimeout(() => this.refresh(), 1500)
+    setTimeout(() => {
+      this.setData({ showOriginal: false })
+      this.refresh()
+    }, 1500)
   },
 
   retryNutrition() {
@@ -64,6 +129,16 @@ Page({
     this.refresh()
   },
 
+  confirmReplacement() {
+    wx.showModal({
+      title: '替换这餐的照片？',
+      content: '替换后，当前风格图、营养估算和备注会一起被新记录取代。',
+      confirmText: '继续替换',
+      confirmColor: '#e85d57',
+      success: (result) => result.confirm && this.chooseReplacement()
+    })
+  },
+
   chooseReplacement() {
     wx.showActionSheet({
       itemList: ['拍照', '从相册选择'],
@@ -90,7 +165,10 @@ Page({
       this.setData({ showOriginal: false })
       this.refresh()
       wx.showToast({ title: '已替换，正在生成', icon: 'none' })
-      setTimeout(() => this.refresh(), 1500)
+      setTimeout(() => {
+        this.setData({ showOriginal: false })
+        this.refresh()
+      }, 1500)
     } catch (error) {
       if (savedImage) await imageStorage.removeSavedFile(savedImage.imagePath, savedImage.imageManaged)
       wx.showToast({ title: '照片替换失败，请重试', icon: 'none' })
