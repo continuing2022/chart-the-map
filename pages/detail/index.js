@@ -1,5 +1,6 @@
 const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
+const processingService = require('../../services/processing-service')
 const { displayDate } = require('../../utils/date')
 
 const SLOT_LABELS = {
@@ -44,7 +45,16 @@ Page({
     this.setData({ statusBarHeight: windowInfo.statusBarHeight || 20 })
   },
 
-  onShow() { this.refresh() },
+  onShow() {
+    this.refresh()
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = processingService.watchPending(() => this.refresh())
+  },
+
+  onHide() {
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = null
+  },
 
   navigateBack() { wx.navigateBack() },
 
@@ -74,7 +84,7 @@ Page({
   startNoteEdit() { this.setData({ noteEditing: true }) },
 
   saveNote(event) {
-    mealService.updateRecord(this.recordId, { note: event.detail.value.slice(0, 50) })
+    processingService.updateNote(this.recordId, event.detail.value.slice(0, 50))
     this.setData({ noteEditing: false })
     this.refresh()
   },
@@ -90,12 +100,12 @@ Page({
 
   changePortion(event) {
     const { itemIndex, portion } = event.currentTarget.dataset
-    mealService.changePortion(this.recordId, Number(itemIndex), portion)
+    processingService.changePortion(this.recordId, Number(itemIndex), portion)
     this.refresh()
   },
 
   retryStylization() {
-    mealService.retryStylization(this.recordId)
+    processingService.retryStylization(this.recordId)
     this.refresh()
     setTimeout(() => {
       this.setData({ showOriginal: false })
@@ -105,7 +115,7 @@ Page({
 
   retryNutrition() {
     const run = () => {
-      mealService.retryNutrition(this.recordId)
+      processingService.retryNutrition(this.recordId)
       this.refresh()
       setTimeout(() => this.refresh(), 1500)
     }
@@ -119,13 +129,13 @@ Page({
   },
 
   acceptNutritionCandidate() {
-    mealService.acceptNutritionCandidate(this.recordId)
+    processingService.acceptNutritionCandidate(this.recordId)
     this.refresh()
     wx.showToast({ title: '已采用新分析', icon: 'none' })
   },
 
   dismissNutritionCandidate() {
-    mealService.dismissNutritionCandidate(this.recordId)
+    processingService.dismissNutritionCandidate(this.recordId)
     this.refresh()
   },
 
@@ -159,7 +169,7 @@ Page({
     let savedImage = null
     try {
       savedImage = await imageStorage.saveSelectedImage(tempFilePath)
-      const result = mealService.createRecord({ dateKey: previous.dateKey, slotKey: previous.slotKey, ...savedImage })
+      const result = processingService.createRecord({ dateKey: previous.dateKey, slotKey: previous.slotKey, ...savedImage })
       this.recordId = result.record.id
       await imageStorage.removeRecordFiles(result.replacedRecord)
       this.setData({ showOriginal: false })
@@ -184,7 +194,7 @@ Page({
       confirmColor: '#d83b35',
       success: (result) => {
         if (!result.confirm) return
-        const record = mealService.deleteRecord(this.recordId)
+        const record = processingService.deleteRecord(this.recordId)
         imageStorage.removeRecordFiles(record)
         wx.navigateBack()
       }

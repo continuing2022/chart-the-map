@@ -72,6 +72,7 @@ function normalizeRecord(record) {
     stylizationTask: record.stylizationTask || legacyTask(record, 'stylization'),
     nutritionTask: record.nutritionTask || legacyTask(record, 'nutrition'),
     isMock: record.isMock !== false,
+    remote: record.remote && typeof record.remote === 'object' ? clone(record.remote) : null,
     updatedAt: record.updatedAt || record.createdAt || Date.now()
   }
 }
@@ -115,7 +116,11 @@ function getRecords(dateKey) {
   return readState().records.filter((record) => record.dateKey === dateKey)
 }
 
-function createRecord({ dateKey, slotKey, imagePath, imageManaged = false }) {
+function getAllRecords() {
+  return readState().records
+}
+
+function createRecord({ dateKey, slotKey, imagePath, imageManaged = false, isMock = true }) {
   const now = Date.now()
   const state = readState()
   const replacedRecord = state.records.find((record) => record.dateKey === dateKey && record.slotKey === slotKey) || null
@@ -137,7 +142,8 @@ function createRecord({ dateKey, slotKey, imagePath, imageManaged = false }) {
     nutrition: null,
     nutritionCandidate: null,
     manuallyConfirmed: false,
-    isMock: true
+    isMock: isMock !== false,
+    remote: null
   }
   state.records.unshift(record)
   writeState(state)
@@ -186,6 +192,7 @@ function finishPendingRecords(now = Date.now()) {
   const state = readState()
   let changed = false
   state.records.forEach((record) => {
+    if (record.isMock === false) return
     if (record.stylizationTask.status === 'processing' && now - record.stylizationTask.startedAt >= MOCK_DELAY_MS) {
       changed = applyTaskResultToState(state, {
         recordId: record.id,
@@ -379,6 +386,7 @@ module.exports = {
   failTask,
   finishPendingRecords,
   getDatesWithRecords,
+  getAllRecords,
   getDayRecap,
   getDayInsight,
   getRecord,

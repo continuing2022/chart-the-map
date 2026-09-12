@@ -13,7 +13,25 @@
 2. 保持 `project.config.json` 的 `touristappid` 用于本地演示；正式调试时替换为自己的小程序 AppID。
 3. 选择任一餐次卡位并拍照或从相册选择图片，即可体验本地模拟流程。
 
-真实腾讯云 COS 和腾讯云混元尚未接入：当前服务层只模拟异步结果，且不会读取或上传用户照片。
+小程序默认仍使用本地模拟，不会上传用户照片。仓库同时提供了一个可启动的远端 API POC，用于在接入腾讯云之前验证完整客户端契约。
+
+## 远端服务适配
+
+客户端已经具备可切换的远端 API 边界，但默认仍为安全的本地模拟模式。公网后端准备好后，在 `config/runtime.js` 中把 `serviceMode` 改为 `remote` 并填写公开的 HTTPS `apiBaseUrl`；不要在该文件或任何小程序源码中填写微信 AppSecret、腾讯云 `SecretId`、`SecretKey` 或混元密钥。
+
+远端模式使用 `wx.login` 换取短期会话，原图只上传到项目自有 API，风格化与营养任务分别轮询并继续受本地任务 ID 防陈旧回写保护。完整接口、私有 COS、删除队列和上线验收要求见 [`spec/cloud-api-contract.md`](./spec/cloud-api-contract.md)。正式联调前还需要把 API 域名加入微信公众平台的 request/uploadFile 合法域名，并把风格图签名地址所用域名加入 downloadFile 合法域名。
+
+## 远端 API POC
+
+Node.js 20 以上可直接运行，不需要安装第三方依赖：
+
+```powershell
+npm start
+```
+
+默认开发模式监听 `http://localhost:3000`，使用本地内存 Provider 验证短期会话、JPEG/PNG 受限上传、EXIF/文本元数据移除、用户隔离、幂等餐食与任务、人工确认保护、短时签名图片、限流、100 元预算闸门和幂等删除。`GET /health` 可检查服务状态，`npm test` 会通过真实 HTTP 与 multipart 请求执行契约集成测试。
+
+生产环境变量示例见 [`.env.example`](./.env.example)，容器入口见 [`Dockerfile`](./Dockerfile)，部署边界和限制见 [`server/README.md`](./server/README.md)。当前本地 Provider 会把照片和状态保存在进程内，并用原始照片模拟风格化输出；它只能用于 POC 联调，不能替代私有 COS、混元、内容安全和共享数据库。完成这些替换并获得公网 HTTPS 域名之前，不要把小程序默认模式切为 `remote`。
 
 ## 第二阶段 · 第一批增量
 

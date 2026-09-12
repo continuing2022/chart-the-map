@@ -3,9 +3,9 @@
 - Goal: 将第一阶段的本地演示骨架升级为可稳定使用、可验证、可平滑接入腾讯云真实服务的微信小程序核心版本。
 - Success Criteria: 照片本地持久保存；替换和删除会清理派生数据；异步任务不会覆盖已删除、已替换或人工确认的记录；历史日期可补记；每日回顾可查看；云端服务具备明确且不泄露密钥的客户端边界；核心规则有自动化验证。
 - Canonical Artifact: 微信小程序源码与 `services/meal-service.js` 服务边界
-- Updated At: 2026-09-10 00:18
-- Overall Status: review
-- Next Action: 用户复核第三阶段体验；通过后开始 T05 真实云服务适配层。
+- Updated At: 2026-09-12 21:05
+- Overall Status: blocked
+- Next Action: 确认 T08 的公网部署目标、正式小程序 AppID 和三个合法域名；随后接入私有 COS/混元 Provider 并执行真机远端验收。
 
 ## Task Index
 
@@ -15,8 +15,10 @@
 | T02 | 实现照片持久化和替换/删除清理 | P0 | done | main | T01 |
 | T03 | 实现安全的异步任务与人工确认保护 | P0 | done | main | T01 |
 | T04 | 补齐历史补记和每日回顾闭环 | P1 | done | main | T02, T03 |
-| T05 | 建立真实云服务适配层和配置说明 | P1 | todo | main | T01 |
-| T06 | 自动化测试与微信开发者工具验收 | P0 | review | main | T02, T03, T04, T05 |
+| T05 | 建立真实云服务适配层和配置说明 | P1 | done | main | T01 |
+| T06 | 自动化测试与微信开发者工具验收 | P0 | done | main | T02, T03, T04, T05 |
+| T07 | 实现可部署的最小远端 API | P0 | done | main | T05 |
+| T08 | 公网部署与真机远端验收 | P0 | blocked | main | T06, T07 |
 
 ## Shared Context
 
@@ -130,11 +132,11 @@
 
 - Context: 真实 COS 与混元只能由自有后端持有长期密钥，小程序需要稳定的 API 契约、短时授权和轮询/回调模型。
 - Priority: P1
-- Status: todo
+- Status: done
 - Owner: main
 - Dependencies: T01
 - Deliverable: 本地/远端模式适配层、无密钥客户端配置、接口契约和接入说明。
-- Last Updated: 2026-09-09 22:33
+- Last Updated: 2026-09-11 19:38
 
 ### Execution Notes
 
@@ -145,20 +147,23 @@
 ### Progress Log
 
 - 2026-09-09 22:33 任务已创建。
+- 2026-09-11 19:26 五个 UI 页面完成视觉重构并提交；开始设计和实现可保留本地模拟默认行为的远端服务适配层。
+- 2026-09-11 19:38 已完成 mock/remote 运行模式、微信短期会话、受鉴权上传、任务轮询/重试、签名图续签、用户修正同步与持久删除队列；补齐远端 API v1 契约。
 
 ### Completion Evidence
 
-- 待补充。
+- `npm test` 共 17 项通过，其中 8 项覆盖远端 HTTPS、短期会话、401 换新、上传、结果合并、远端/本地隔离、陈旧任务拒绝与删除重试。
+- `npm run check` 与 `git diff --check` 通过；小程序默认仍保持 `mock` 模式，不包含任何云端长期密钥。
 
 ## Task T06: 自动化测试与微信开发者工具验收
 
 - Context: 数据一致性是上线前高风险面，且部分文件系统/API 行为只能在微信运行时验证。
 - Priority: P0
-- Status: review
+- Status: done
 - Owner: main
 - Dependencies: T02, T03, T04, T05
 - Deliverable: 可本地运行的核心服务测试、静态检查，以及微信开发者工具手工验收清单。
-- Last Updated: 2026-09-10 00:18
+- Last Updated: 2026-09-12 21:05
 
 ### Execution Notes
 
@@ -170,19 +175,76 @@
 
 - 2026-09-09 22:33 任务已创建。
 - 2026-09-10 00:18 Node 核心测试增至 9 项并全部通过；页面语法检查通过；开发者工具自动化 API 验证首页、日历、回顾页路由和真实图片上传。
+- 2026-09-12 21:05 重新执行客户端、远端适配层和真实 HTTP/multipart 服务端契约测试；23 项全部通过，语法检查与差异检查通过，任务收口。
 
 ### Completion Evidence
 
-- `npm test` 9/9 通过；`npm run check` 通过；开发者工具真实图片上传、持久化状态、历史餐次渲染、昨日回顾汇总和首次自动打开通过。替换、删除和真实设备相机流程仍建议发布前人工复核。
+- `npm test` 23/23 通过；`npm run check` 与 `git diff --check` 通过；开发者工具真实图片上传、持久化状态、历史餐次渲染、昨日回顾汇总和首次自动打开通过。真实设备相机、远端替换/删除与离线恢复并入 T08 发布前验收。
 
 ## Global Progress Log
 
 - 2026-09-09 22:33 第二阶段执行板已创建；当前不依赖用户提供密钥即可开始 T01-T03。
 - 2026-09-09 22:43 第一批增量实现完成；7 项自动化测试与 JavaScript 语法检查通过，等待微信开发者工具手工验收。
 - 2026-09-10 00:18 第三阶段历史补记与每日回顾完成；真实上传测试期间发现并修复日历循环变量渲染缺失、首页初次路由竞争两个运行时问题。
+- 2026-09-11 19:26 进入 T05；约束为客户端仅保存公开 API 基址，微信登录态换取短期会话，所有腾讯云长期密钥继续只保留在服务端。
+- 2026-09-11 19:38 T05 完成并进入联调评审；下一阻塞面是按 v1 契约部署后端、配置微信合法域名并完成真机远端流程验收。
+- 2026-09-11 20:02 开始 T07；采用零第三方依赖、单实例可运行的 POC API 先闭合 v1 契约，真实腾讯云 Provider 与公网部署由 T08 接续。
+- 2026-09-12 21:00 T07 完成；服务入口冒烟、23 项自动化测试、静态检查与差异空白检查通过，T08 等待公网与腾讯云资源信息。
+- 2026-09-12 21:05 T06 在复跑 23 项测试和静态检查后由 review 收口为 done；当前唯一未完成任务为 T08。
+
+## Task T07: 实现可部署的最小远端 API
+
+- Context: 客户端远端适配和 API v1 契约已经完成，但仓库内尚无可启动的服务端，无法执行端到端联调。
+- Priority: P0
+- Status: done
+- Owner: main
+- Dependencies: T05
+- Deliverable: 可通过环境变量配置并直接启动的最小 Node.js API、受限上传与短期会话、幂等餐食/任务状态机、签名图片读取、用户修正、删除和契约集成测试。
+- Last Updated: 2026-09-12 21:00
+
+### Execution Notes
+
+- Files or surfaces: `server/`、`tests/server-api.test.js`、`package.json`、`README.md`、`spec/cloud-api-contract.md`。
+- Plan: 不引入第三方依赖；本地 Provider 用于自动化联调，微信 code2session 和腾讯云真实资源通过明确适配边界与环境变量接入。
+- Risks: 单实例内存状态和本地文件只适合 POC；私有 COS、混元、内容安全、共享持久化与生产级限流必须在 T08 部署环境中替换和复核。
+
+### Progress Log
+
+- 2026-09-11 20:02 已确认客户端 17 项测试及静态检查通过，开始实现服务端契约。
+- 2026-09-12 21:00 已实现短期会话、受限 multipart 上传、元数据移除、用户隔离、幂等餐食/任务、人工确认保护、短时签名图、限流、预算闸门与幂等删除；补齐容器和部署说明。
+
+### Completion Evidence
+
+- `npm test` 共 23 项通过，其中 6 项通过真实 HTTP/multipart 覆盖服务端契约；`npm run check` 与 `git diff --check` 通过。
+- `npm start` 成功监听 3000 端口，`GET /health` 返回 `{"ok":true,"provider":"local-poc"}`。
+
+## Task T08: 公网部署与真机远端验收
+
+- Context: 微信小程序远端模式要求已备案 HTTPS API、微信合法域名、真实 AppID/AppSecret，以及服务端腾讯云资源和凭证。
+- Priority: P0
+- Status: blocked
+- Owner: main
+- Dependencies: T06, T07
+- Deliverable: 部署真实后端、配置 request/uploadFile/downloadFile 合法域名，并完成真机登录、上传、任务、重试、替换、删除和离线恢复验收。
+- Last Updated: 2026-09-12 21:00
+
+### Execution Notes
+
+- Files or surfaces: 部署平台、微信公众平台、腾讯云 COS/混元/内容安全、`config/runtime.js`。
+- Plan: T07 通过后根据用户可用的域名与云资源选择部署目标；所有长期密钥只写入服务端受管环境变量。
+- Risks: 当前仓库上下文未提供公网域名、正式小程序 AppID 或云端运行环境，不能提前宣称真机远端验收完成。
+
+### Progress Log
+
+- 2026-09-11 20:02 已登记为 T07 后续任务。
+- 2026-09-12 21:00 POC 契约前置已完成；当前缺少公网部署目标/域名、正式小程序 AppID 和腾讯云 COS/混元运行资源，无法安全完成真实 Provider 与真机合法域名验收。
+
+### Completion Evidence
+
+- 待补充。
 
 ## Final Closure
 
-- Delivered: 已交付照片持久化、受控清理、异步一致性、人工确认保护、历史补记和每日回顾闭环。
-- Verified By: `npm test` 9/9 通过；`npm run check` 通过；微信开发者工具真实桌面图片上传与运行时页面状态通过。
-- Remaining Follow-ups: T05 真实后端适配与域名配置；发布前复核真实设备相机、替换和删除流程。
+- Delivered: 已交付照片持久化、受控清理、异步一致性、人工确认保护、历史补记、每日回顾、可切换客户端适配层、API v1 契约，以及可执行的零依赖远端 API POC 与容器入口。
+- Verified By: `npm test` 23/23 通过；`npm run check`、`git diff --check`、服务启动与健康检查通过；此前微信开发者工具真实桌面图片上传与本地模式运行时页面状态通过。
+- Remaining Follow-ups: 用私有 COS、混元、内容安全、共享存储和持久任务队列替换本地 POC Provider；部署公网 HTTPS、配置微信合法域名，并完成远端模式、真实设备相机、替换、删除和离线恢复验收。

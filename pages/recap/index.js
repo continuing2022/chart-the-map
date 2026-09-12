@@ -1,4 +1,5 @@
 const mealService = require('../../services/meal-service')
+const processingService = require('../../services/processing-service')
 const { fromDateKey, toDateKey, yesterdayKey } = require('../../utils/date')
 
 const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
@@ -46,6 +47,12 @@ Page({
   },
 
   onShow() {
+    this.refresh()
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = processingService.watchPending(() => this.refresh())
+  },
+
+  refresh() {
     const recap = mealService.getDayRecap(this.dateKey)
     if (!recap.recordedMeals) return this.leavePage()
 
@@ -65,6 +72,11 @@ Page({
       collageNote: COLLAGE_NOTES[recap.recordedMeals] || '',
       recap: { ...recap, records }
     })
+  },
+
+  onHide() {
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = null
   },
 
   leavePage() {

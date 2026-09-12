@@ -1,5 +1,6 @@
 const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
+const processingService = require('../../services/processing-service')
 const { fromDateKey, toDateKey } = require('../../utils/date')
 
 const SLOT_PRESENTATION = {
@@ -85,6 +86,13 @@ Page({
 
   onShow() {
     this.refresh()
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = processingService.watchPending(() => this.refresh())
+  },
+
+  onHide() {
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = null
   },
 
   refresh() {
@@ -169,7 +177,7 @@ Page({
     let savedImage = null
     try {
       savedImage = await imageStorage.saveSelectedImage(tempFilePath)
-      const result = mealService.createRecord({ dateKey, slotKey: slot.key, ...savedImage })
+      const result = processingService.createRecord({ dateKey, slotKey: slot.key, ...savedImage })
       await imageStorage.removeRecordFiles(result.replacedRecord)
       this.selectedDateKey = dateKey
       this.selectedMonthKey = monthKeyFrom(dateKey)

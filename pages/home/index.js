@@ -1,5 +1,6 @@
 const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
+const processingService = require('../../services/processing-service')
 const { displayDate, toDateKey, yesterdayKey } = require('../../utils/date')
 
 const SLOT_PRESENTATION = {
@@ -69,6 +70,8 @@ Page({
   onShow() {
     this.openingAutomaticRecap = false
     this.refresh()
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = processingService.watchPending(() => this.refresh())
     if (this.pageReady) this.scheduleAutomaticRecap()
   },
 
@@ -79,6 +82,8 @@ Page({
 
   onHide() {
     clearTimeout(this.recapTimer)
+    if (this.stopProcessingWatch) this.stopProcessingWatch()
+    this.stopProcessingWatch = null
   },
 
   scheduleAutomaticRecap() {
@@ -148,7 +153,7 @@ Page({
       let savedImage = null
       try {
         savedImage = await imageStorage.saveSelectedImage(tempFilePath)
-        const result = mealService.createRecord({
+        const result = processingService.createRecord({
           dateKey: this.data.todayKey,
           slotKey: slot.key,
           ...savedImage

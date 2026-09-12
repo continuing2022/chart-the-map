@@ -1,0 +1,6 @@
+.git
+.env*
+.wayfinder
+node_modules
+project.private.config.json
+tests
