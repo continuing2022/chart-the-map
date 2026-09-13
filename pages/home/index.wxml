@@ -1,16 +1,23 @@
-<view class="page safe-bottom">
-  <view class="brand-row">
-    <view class="brand-block">
-      <view class="brand-title">食光日记<text class="brand-rays">✶</text></view>
-      <view class="brand-underline"></view>
-      <view class="brand-subtitle">AI 饮食日记</view>
+<view class="custom-nav" style="padding-top: {{statusBarHeight}}px; height: {{navigationBarHeight}}px;">
+  <view class="nav-inner">
+    <view class="nav-brand-group" aria-label="食光日记，AI 饮食日记">
+      <view class="nav-brand">
+        <text>食光日记</text><text class="nav-spark">✦</text>
+        <view class="nav-swash"></view>
+      </view>
+      <view class="nav-subtitle">AI 饮食日记</view>
     </view>
     <view class="settings tap-target" hover-class="tap-soft" bindtap="openSettings" aria-label="打开设置">
-      <view class="settings-icon">⚙</view>
+      <image src="/assets/icons/settings.svg" mode="aspectFit" aria-hidden="true" />
     </view>
   </view>
+</view>
 
-  <view class="day-overview">
+<view class="page safe-bottom" style="--navigation-total: {{navigationTotalHeight}}px;">
+  <view class="page-glow glow-pink" aria-hidden="true"></view>
+  <view class="page-glow glow-blue" aria-hidden="true"></view>
+
+  <view class="day-journal">
     <view class="day-copy">
       <view class="date-line">
         <text class="date-title">{{dateTitle}}</text>
@@ -18,30 +25,54 @@
       </view>
       <view class="greeting"><text class="greeting-sun">☀</text>{{greeting}}</view>
     </view>
-    <view class="weather-art" aria-hidden="true">☀</view>
+    <view class="journal-quote" aria-hidden="true">
+      <view>好好吃饭</view>
+      <view>是对生活的热爱 ♡</view>
+    </view>
+    <view class="daisy-sticker" aria-hidden="true">
+      <view class="stem stem-one"></view><view class="stem stem-two"></view>
+      <view class="leaf leaf-one"></view><view class="leaf leaf-two"></view>
+      <view class="flower flower-one"><text></text></view>
+      <view class="flower flower-two"><text></text></view>
+    </view>
   </view>
 
-  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card tap-card" hover-class="tap-card-active" bindtap="openYesterdayRecap">
+  <view wx:if="{{yesterdayInsight.recordedMeals}}" class="recap-card tap-card" hover-class="tap-card-active" bindtap="openYesterdayRecap" aria-label="查看昨天的食光记录">
+    <view class="recap-polaroid" aria-hidden="true">
+      <view class="recap-tape"></view>
+      <view class="recap-photo"><image src="/assets/meal-breakfast.png" mode="aspectFit" /></view>
+      <view class="recap-caption">Good memory ♡</view>
+    </view>
     <view class="recap-copy">
-      <view class="recap-title">昨天的食光已收藏，</view>
+      <view class="recap-eyebrow">YESTERDAY</view>
+      <view class="recap-title">昨天的食光已收藏</view>
       <view class="recap-body">记录了 {{yesterdayInsight.recordedMeals}} 餐，点进日历随时回看</view>
     </view>
-    <view class="recap-arrow">›</view>
-    <view class="recap-mascot" aria-hidden="true">🐱<text>♡</text></view>
+    <view class="recap-arrow" aria-hidden="true">›</view>
+    <view class="recap-heart" aria-hidden="true">♡</view>
   </view>
 
   <view class="section-heading">
-    <view class="section-title">今天吃了什么</view>
-    <view class="section-note">记录一餐，<text>♡</text><br />收藏一点生活的温柔</view>
+    <view class="section-title-wrap">
+      <view class="section-title">今天吃了什么</view>
+      <view class="section-swash" aria-hidden="true"></view>
+    </view>
+    <view class="section-note">记录一餐，♡ 收藏<br />一点生活的温柔</view>
   </view>
 
-  <view class="slot-list {{hasRecords ? 'is-mixed' : 'is-grid'}}">
-    <view wx:for="{{slots}}" wx:for-item="slot" wx:key="key" class="meal-card {{slot.record ? 'filled' : 'empty'}}">
+  <view class="slot-list is-grid {{hasRecords ? 'has-records' : ''}}">
+    <view wx:for="{{slots}}" wx:for-item="slot" wx:key="key" class="meal-card meal-{{slot.key}} {{slot.record ? 'filled' : 'empty'}}">
       <view wx:if="{{slot.record}}" class="record-row tap-card" hover-class="tap-card-active" bindtap="openDetail" data-id="{{slot.record.id}}">
-        <image class="meal-image" src="{{slot.imageSource}}" mode="aspectFill" />
+        <view class="record-image-wrap">
+          <image class="meal-image" src="{{slot.imageSource}}" mode="aspectFill" />
+          <view class="record-label">{{slot.label}}</view>
+        </view>
         <view class="record-copy">
           <view class="record-heading">
-            <view class="record-title">{{slot.label}}</view>
+            <view>
+              <view class="record-kicker"><text></text>TODAY'S MEMORY</view>
+              <view class="record-title">{{slot.label}}</view>
+            </view>
             <view class="more-button tap-target" hover-class="tap-soft" catchtap="showRecordActions" data-slot="{{slot}}" aria-label="{{slot.label}}更多操作">•••</view>
           </view>
           <view wx:for="{{slot.statusLines}}" wx:for-item="line" wx:key="text" class="status-line status-{{line.state}}">
@@ -55,23 +86,26 @@
           <view wx:if="{{slot.record.isMock}}" class="mock-note">本地模拟</view>
         </view>
       </view>
-      <view wx:else class="empty-row tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}">
-        <view class="meal-icon icon-{{slot.accent}}" aria-hidden="true">
-          <view wx:if="{{slot.key === 'breakfast'}}" class="sun-art">
-            <view class="sun-core"></view>
-            <view class="sun-ray ray-one"></view><view class="sun-ray ray-two"></view>
-            <view class="sun-ray ray-three"></view><view class="sun-ray ray-four"></view>
+
+      <view wx:else class="empty-row tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}" aria-label="点击记录{{slot.label}}">
+        <view class="card-tape" aria-hidden="true"></view>
+        <view class="meal-art-shell art-{{slot.key}}" aria-hidden="true">
+          <view class="art-blob"></view>
+          <view class="scene-symbol">{{slot.icon}}</view>
+          <view class="art-crop">
+            <image wx:if="{{slot.key === 'breakfast'}}" class="meal-illustration" src="/assets/meal-breakfast.png" mode="aspectFit" />
+            <image wx:elif="{{slot.key === 'lunch'}}" class="meal-illustration" src="/assets/meal-lunch.png" mode="aspectFit" />
+            <image wx:elif="{{slot.key === 'dinner'}}" class="meal-illustration" src="/assets/meal-dinner.png" mode="aspectFit" />
+            <image wx:else class="meal-illustration" src="/assets/meal-late-night.png" mode="aspectFit" />
           </view>
-          <view wx:elif="{{slot.key === 'lunch'}}" class="utensil-art">
-            <view class="fork-art"><view class="fork-tines"></view></view>
-            <view class="spoon-art"></view>
+          <view class="hand-note note-{{slot.key}}">
+            <block wx:if="{{slot.key === 'breakfast'}}"><view>Good</view><view>Morning!</view></block>
+            <view wx:elif="{{slot.key === 'lunch'}}">Yummy ♡</view>
+            <block wx:elif="{{slot.key === 'dinner'}}"><view>Good food</view><view>Good mood ♡</view></block>
+            <block wx:else><view>Night</view><view>time ♡</view></block>
           </view>
-          <view wx:elif="{{slot.key === 'dinner'}}" class="sunset-art">
-            <view class="sunset-core"></view><view class="sunset-line"></view>
-          </view>
-          <view wx:else class="moon-art"></view>
         </view>
-        <view class="empty-copy">
+        <view class="empty-meta">
           <view class="slot-name">{{slot.label}}</view>
           <view class="empty-prompt">
             <view class="plus" aria-hidden="true"><view class="plus-horizontal"></view><view class="plus-vertical"></view></view>

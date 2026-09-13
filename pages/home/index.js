@@ -57,6 +57,9 @@ function decorateSlot(slot) {
 
 Page({
   data: {
+    statusBarHeight: 20,
+    navigationBarHeight: 44,
+    navigationTotalHeight: 64,
     todayKey: toDateKey(new Date()),
     dateLabel: '',
     dateTitle: '',
@@ -65,6 +68,21 @@ Page({
     slots: [],
     hasRecords: false,
     yesterdayInsight: null
+  },
+
+  onLoad() {
+    try {
+      const systemInfo = wx.getSystemInfoSync()
+      const menuButton = wx.getMenuButtonBoundingClientRect()
+      const capsuleGap = Math.max(menuButton.top - systemInfo.statusBarHeight, 4)
+      this.setData({
+        statusBarHeight: systemInfo.statusBarHeight,
+        navigationBarHeight: menuButton.height + capsuleGap * 2,
+        navigationTotalHeight: systemInfo.statusBarHeight + menuButton.height + capsuleGap * 2
+      })
+    } catch (error) {
+      // Keep the safe defaults for older base libraries and test environments.
+    }
   },
 
   onShow() {
