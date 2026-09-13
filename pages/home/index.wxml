@@ -36,7 +36,7 @@
   </view>
 
   <view class="slot-list {{hasRecords ? 'is-mixed' : 'is-grid'}}">
-    <view wx:for="{{slots}}" wx:key="key" class="meal-card {{slot.record ? 'filled' : 'empty'}}">
+    <view wx:for="{{slots}}" wx:for-item="slot" wx:key="key" class="meal-card {{slot.record ? 'filled' : 'empty'}}">
       <view wx:if="{{slot.record}}" class="record-row tap-card" hover-class="tap-card-active" bindtap="openDetail" data-id="{{slot.record.id}}">
         <image class="meal-image" src="{{slot.imageSource}}" mode="aspectFill" />
         <view class="record-copy">
@@ -56,17 +56,29 @@
         </view>
       </view>
       <view wx:else class="empty-row tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}">
-        <view class="meal-icon icon-{{slot.accent}}">{{slot.icon}}</view>
+        <view class="meal-icon icon-{{slot.accent}}" aria-hidden="true">
+          <view wx:if="{{slot.key === 'breakfast'}}" class="sun-art">
+            <view class="sun-core"></view>
+            <view class="sun-ray ray-one"></view><view class="sun-ray ray-two"></view>
+            <view class="sun-ray ray-three"></view><view class="sun-ray ray-four"></view>
+          </view>
+          <view wx:elif="{{slot.key === 'lunch'}}" class="utensil-art">
+            <view class="fork-art"><view class="fork-tines"></view></view>
+            <view class="spoon-art"></view>
+          </view>
+          <view wx:elif="{{slot.key === 'dinner'}}" class="sunset-art">
+            <view class="sunset-core"></view><view class="sunset-line"></view>
+          </view>
+          <view wx:else class="moon-art"></view>
+        </view>
         <view class="empty-copy">
           <view class="slot-name">{{slot.label}}</view>
-          <view class="empty-prompt"><view class="plus">+</view><text>点击记录{{slot.label}}</text></view>
+          <view class="empty-prompt">
+            <view class="plus" aria-hidden="true"><view class="plus-horizontal"></view><view class="plus-vertical"></view></view>
+            <text>点击记录{{slot.label}}</text>
+          </view>
         </view>
       </view>
     </view>
-  </view>
-
-  <view class="tabbar">
-    <view class="tab active"><text class="tab-icon">⌂</text><text>今天</text></view>
-    <view class="tab" hover-class="tab-pressed" bindtap="openCalendar"><text class="tab-icon calendar-icon">▦</text><text>日历</text></view>
   </view>
 </view>

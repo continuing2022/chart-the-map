@@ -311,27 +311,9 @@
 }
 
 .edit-glyph {
-  position: relative;
-  width: 31rpx;
-  height: 31rpx;
-  box-sizing: border-box;
-  border: 4rpx solid #8b929c;
-  border-top-color: transparent;
-  border-radius: 6rpx;
-}
-
-.edit-glyph::before {
-  position: absolute;
-  top: -7rpx;
-  right: -5rpx;
-  width: 8rpx;
-  height: 27rpx;
-  border: 3rpx solid #8b929c;
-  border-radius: 5rpx;
-  background: #fff;
-  content: '';
-  transform: rotate(42deg);
-  transform-origin: center;
+  display: block;
+  width: 38rpx;
+  height: 38rpx;
 }
 
 .note-copy,

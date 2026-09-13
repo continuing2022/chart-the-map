@@ -85,6 +85,17 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) tabBar.setData({ selected: 1 })
+    const app = getApp()
+    const pendingDateKey = app.globalData.pendingCalendarDateKey
+    const todayKey = toDateKey(new Date())
+    if (pendingDateKey && pendingDateKey <= todayKey) {
+      this.selectedDateKey = pendingDateKey
+      this.selectedMonthKey = monthKeyFrom(pendingDateKey)
+      this.includeSelectedDate = true
+    }
+    app.globalData.pendingCalendarDateKey = ''
     this.refresh()
     if (this.stopProcessingWatch) this.stopProcessingWatch()
     this.stopProcessingWatch = processingService.watchPending(() => this.refresh())
@@ -203,9 +214,6 @@ Page({
   },
 
   backToToday() {
-    wx.navigateBack({
-      delta: 1,
-      fail: () => wx.redirectTo({ url: '/pages/home/index' })
-    })
+    wx.switchTab({ url: '/pages/home/index' })
   }
 })

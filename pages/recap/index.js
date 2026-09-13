@@ -92,7 +92,8 @@ Page({
   },
 
   openDateRecords() {
-    wx.redirectTo({ url: `/pages/calendar/index?dateKey=${this.dateKey}` })
+    getApp().globalData.pendingCalendarDateKey = this.dateKey
+    wx.switchTab({ url: '/pages/calendar/index' })
   },
 
   openDetail(event) {

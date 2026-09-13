@@ -6,7 +6,7 @@
   },
   "scripts": {
     "start": "node server/index.js",
-    "test": "node tests/meal-service.test.js && node tests/cloud-api.test.js && node tests/processing-service.test.js && node tests/server-api.test.js",
-    "check": "node --check config/runtime.js && node --check services/cloud-api.js && node --check services/processing-service.js && node --check services/meal-service.js && node --check services/image-storage.js && node --check pages/home/index.js && node --check pages/calendar/index.js && node --check pages/recap/index.js && node --check pages/detail/index.js && node --check pages/settings/index.js && node --check server/config.js && node --check server/security.js && node --check server/image-safety.js && node --check server/providers/local-provider.js && node --check server/app.js && node --check server/index.js"
+    "test": "node tests/meal-service.test.js && node tests/cloud-api.test.js && node tests/processing-service.test.js && node tests/navigation.test.js && node tests/server-api.test.js",
+    "check": "node --check config/runtime.js && node --check custom-tab-bar/index.js && node --check services/cloud-api.js && node --check services/processing-service.js && node --check services/meal-service.js && node --check services/image-storage.js && node --check pages/home/index.js && node --check pages/calendar/index.js && node --check pages/recap/index.js && node --check pages/detail/index.js && node --check pages/settings/index.js && node --check server/config.js && node --check server/security.js && node --check server/image-safety.js && node --check server/providers/local-provider.js && node --check server/app.js && node --check server/index.js"
   }
 }

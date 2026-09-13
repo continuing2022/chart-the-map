@@ -68,6 +68,8 @@ Page({
   },
 
   onShow() {
+    const tabBar = this.getTabBar && this.getTabBar()
+    if (tabBar) tabBar.setData({ selected: 0 })
     this.openingAutomaticRecap = false
     this.refresh()
     if (this.stopProcessingWatch) this.stopProcessingWatch()
@@ -184,10 +186,6 @@ Page({
 
   openRecord(recordId) {
     wx.navigateTo({ url: `/pages/detail/index?id=${recordId}` })
-  },
-
-  openCalendar() {
-    wx.navigateTo({ url: '/pages/calendar/index' })
   },
 
   openYesterdayRecap() {

@@ -17,7 +17,52 @@
   },
   "libVersion": "3.17.3",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "value": ".wayfinder",
+        "type": "folder"
+      },
+      {
+        "value": "server",
+        "type": "folder"
+      },
+      {
+        "value": "spec",
+        "type": "folder"
+      },
+      {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": ".dockerignore",
+        "type": "file"
+      },
+      {
+        "value": ".env.example",
+        "type": "file"
+      },
+      {
+        "value": ".gitignore",
+        "type": "file"
+      },
+      {
+        "value": "CONTEXT.md",
+        "type": "file"
+      },
+      {
+        "value": "Dockerfile",
+        "type": "file"
+      },
+      {
+        "value": "README.md",
+        "type": "file"
+      },
+      {
+        "value": "package.json",
+        "type": "file"
+      }
+    ],
     "include": []
   },
   "condition": {},

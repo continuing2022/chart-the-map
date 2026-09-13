@@ -1,0 +1,25 @@
+<view class="tabbar-safe-area">
+  <view class="tabbar-shell">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="pagePath"
+      class="tab {{selected === item.index ? 'active' : ''}}"
+      hover-class="tab-pressed"
+      data-index="{{item.index}}"
+      data-path="{{item.pagePath}}"
+      bindtap="switchTab"
+      aria-role="button"
+      aria-label="切换到{{item.text}}"
+    >
+      <view class="tab-icon tab-icon-{{item.icon}}" aria-hidden="true">
+        <view wx:if="{{item.icon === 'home'}}" class="home-roof"></view>
+        <view wx:if="{{item.icon === 'home'}}" class="home-body"></view>
+        <view wx:else class="calendar-body">
+          <view class="calendar-rings"><text></text><text></text></view>
+          <view class="calendar-dots"><text></text><text></text><text></text><text></text></view>
+        </view>
+      </view>
+      <text class="tab-label">{{item.text}}</text>
+    </view>
+  </view>
+</view>

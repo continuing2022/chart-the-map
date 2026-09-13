@@ -61,9 +61,4 @@
     <view class="empty-copy">还没有记录，<br />回到「今天」，从第一餐开始吧。</view>
     <button class="today-button" hover-class="today-button-active" bindtap="backToToday">回到今天</button>
   </view>
-
-  <view class="tabbar">
-    <view class="tab" hover-class="tab-pressed" bindtap="backToToday"><text class="tab-icon">⌂</text><text>今天</text></view>
-    <view class="tab active"><text class="tab-icon calendar-tab-icon">▦</text><text>日历</text></view>
-  </view>
 </view>

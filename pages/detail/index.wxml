@@ -57,7 +57,7 @@
       <view class="card-heading">
         <view class="card-title">这一餐的小记</view>
         <view class="edit-button tap-target" bindtap="startNoteEdit" hover-class="tap-soft" aria-role="button" aria-label="编辑这一餐的小记">
-          <view class="edit-glyph" aria-hidden="true"><text></text></view>
+          <image class="edit-glyph" src="/assets/icons/edit-note.svg" mode="aspectFit" aria-hidden="true" />
         </view>
       </view>
       <view wx:if="{{!noteEditing}}" class="note-copy {{record.note ? '' : 'placeholder'}}" bindtap="startNoteEdit">
