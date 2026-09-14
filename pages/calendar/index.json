@@ -1,4 +1,8 @@
 {
   "navigationBarTitleText": "",
-  "navigationBarBackgroundColor": "#FFFAF4"
+  "navigationStyle": "custom",
+  "navigationBarBackgroundColor": "#FFFAF4",
+  "usingComponents": {
+    "app-nav": "/components/app-nav/index"
+  }
 }

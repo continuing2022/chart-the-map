@@ -1,0 +1,14 @@
+<view class="custom-nav" style="padding-top: {{statusBarHeight}}px; height: {{navigationBarHeight}}px;">
+  <view class="nav-inner" style="padding-right: {{rightSafeWidth}}px;">
+    <view class="nav-brand-group" aria-label="食光日记，AI 饮食日记">
+      <view class="nav-brand">
+        <text>食光日记</text><text class="nav-spark">✦</text>
+        <view class="nav-swash" aria-hidden="true"></view>
+      </view>
+      <view class="nav-subtitle">AI 饮食日记</view>
+    </view>
+    <view class="settings tap-target" hover-class="tap-soft" bindtap="openSettings" aria-label="打开设置">
+      <image src="/assets/icons/settings.svg" mode="aspectFit" aria-hidden="true" />
+    </view>
+  </view>
+</view>

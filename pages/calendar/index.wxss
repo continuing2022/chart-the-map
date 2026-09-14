@@ -1,11 +1,54 @@
 .page {
+  position: relative;
   box-sizing: border-box;
-  min-height: 100vh;
-  padding: 42rpx 34rpx 184rpx;
+  min-height: calc(100vh - var(--navigation-total));
+  padding: 24rpx 32rpx 184rpx;
   padding-bottom: calc(184rpx + env(safe-area-inset-bottom));
+  overflow: hidden;
   background:
-    radial-gradient(circle at 13% 13%, rgba(255, 206, 151, .12), transparent 27%),
-    linear-gradient(180deg, #fffcf8 0%, #fffaf4 100%);
+    radial-gradient(circle at 93% 8%, rgba(255, 204, 149, .18), transparent 24%),
+    radial-gradient(circle at 2% 72%, rgba(174, 207, 169, .12), transparent 19%),
+    linear-gradient(180deg, #fffdf9 0%, #fff9f1 58%, #fffaf4 100%);
+}
+
+.page::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: .13;
+  background-image: radial-gradient(rgba(93, 74, 60, .24) .7rpx, transparent .7rpx);
+  background-size: 9rpx 9rpx;
+  content: '';
+  pointer-events: none;
+}
+
+.page > view:not(.paper-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.paper-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(18rpx);
+  pointer-events: none;
+}
+
+.glow-apricot {
+  top: 120rpx;
+  right: -135rpx;
+  width: 350rpx;
+  height: 350rpx;
+  background: rgba(255, 213, 173, .15);
+}
+
+.glow-blue {
+  top: 760rpx;
+  left: -175rpx;
+  width: 380rpx;
+  height: 380rpx;
+  background: rgba(185, 219, 244, .12);
 }
 
 .calendar-header,
@@ -20,34 +63,86 @@
 .calendar-header {
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 31rpx;
-  padding: 0 6rpx;
+  margin-bottom: 38rpx;
+  padding: 0 10rpx;
+}
+
+.header-copy {
+  min-width: 0;
+}
+
+.title-wrap {
+  position: relative;
+  display: inline-block;
 }
 
 .title {
-  color: #151515;
-  font-size: 54rpx;
+  position: relative;
+  z-index: 2;
+  color: #2d2521;
+  font-family: "STKaiti", "KaiTi", "PingFang SC", sans-serif;
+  font-size: 62rpx;
   font-weight: 750;
-  line-height: 1.12;
-  letter-spacing: -2rpx;
+  line-height: 1.08;
+  letter-spacing: 5rpx;
 }
 
+.title-swash {
+  position: absolute;
+  z-index: 1;
+  right: -18rpx;
+  bottom: 0;
+  left: -10rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(248, 145, 137, .36), rgba(255, 190, 155, .24));
+  transform: rotate(-3deg);
+}
+
+.title-rays {
+  position: absolute;
+  z-index: 3;
+  top: -2rpx;
+  right: -43rpx;
+  width: 42rpx;
+  height: 44rpx;
+}
+
+.title-rays text {
+  position: absolute;
+  display: block;
+  width: 5rpx;
+  height: 18rpx;
+  border-radius: 5rpx;
+  background: #f4a34b;
+  transform-origin: center bottom;
+}
+
+.title-rays text:nth-child(1) { top: 0; left: 6rpx; transform: rotate(9deg); }
+.title-rays text:nth-child(2) { top: 12rpx; right: 7rpx; transform: rotate(55deg); }
+.title-rays text:nth-child(3) { bottom: 0; left: 1rpx; height: 13rpx; transform: rotate(102deg); }
+
 .subtitle {
-  margin-top: 10rpx;
-  color: #989898;
+  margin-top: 12rpx;
+  color: #7f7975;
   font-size: 25rpx;
   line-height: 1.45;
+  letter-spacing: 1rpx;
 }
 
 .calendar-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 76rpx;
-  height: 76rpx;
+  box-sizing: border-box;
+  width: 78rpx;
+  height: 78rpx;
+  margin-top: 5rpx;
+  border: 1rpx solid rgba(91, 72, 59, .07);
   border-radius: 28rpx;
-  background: rgba(242, 239, 235, .88);
-  color: #777;
+  background: rgba(255, 253, 249, .9);
+  box-shadow: 0 8rpx 22rpx rgba(91, 68, 51, .08);
+  color: #706c68;
 }
 
 .calendar-glyph {
@@ -63,8 +158,8 @@
 .calendar-glyph::before {
   position: absolute;
   top: 8rpx;
-  left: 0;
   right: 0;
+  left: 0;
   height: 4rpx;
   background: currentColor;
   content: '';
@@ -73,8 +168,8 @@
 .calendar-rings {
   position: absolute;
   top: -9rpx;
-  left: 6rpx;
   right: 6rpx;
+  left: 6rpx;
   display: flex;
   justify-content: space-between;
 }
@@ -88,9 +183,9 @@
 
 .calendar-grid {
   position: absolute;
-  left: 6rpx;
   right: 6rpx;
   bottom: 5rpx;
+  left: 6rpx;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -106,35 +201,37 @@
 
 .month-nav {
   box-sizing: border-box;
-  width: 344rpx;
-  min-height: 68rpx;
-  margin: 0 auto 26rpx;
-  padding: 4rpx 9rpx;
+  width: 374rpx;
+  min-height: 78rpx;
+  margin: 0 auto 34rpx;
+  padding: 6rpx 10rpx;
   justify-content: space-between;
-  border: 1rpx solid rgba(95, 75, 59, .035);
-  border-radius: 34rpx;
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 12rpx 34rpx rgba(88, 64, 47, .08);
+  border: 1rpx solid rgba(94, 72, 57, .045);
+  border-radius: 39rpx;
+  background: rgba(255, 255, 255, .93);
+  box-shadow: 0 13rpx 35rpx rgba(88, 64, 47, .09);
 }
 
 .month-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 58rpx;
-  height: 58rpx;
-  border-radius: 29rpx;
-  color: #171717;
+  width: 62rpx;
+  height: 62rpx;
+  flex: none;
+  border-radius: 31rpx;
+  color: #2d2825;
   font-size: 48rpx;
   font-weight: 300;
   line-height: 1;
 }
 
 .month-control.disabled {
-  color: #d0cdca;
+  color: #d1cdca;
 }
 
 .month-picker {
+  min-width: 0;
   flex: 1;
 }
 
@@ -142,11 +239,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 58rpx;
-  border-radius: 24rpx;
-  color: #171717;
-  font-size: 30rpx;
-  font-weight: 650;
+  min-height: 62rpx;
+  border-radius: 28rpx;
+  color: #191613;
+  font-size: 32rpx;
+  font-weight: 750;
+  letter-spacing: .5rpx;
 }
 
 .day-list {
@@ -154,20 +252,50 @@
 }
 
 .day-card {
+  position: relative;
   box-sizing: border-box;
-  margin-bottom: 20rpx;
-  padding: 24rpx 22rpx 25rpx;
-  border: 1rpx solid rgba(80, 62, 48, .035);
-  border-radius: 30rpx;
-  background: rgba(255, 255, 255, .94);
-  box-shadow: 0 12rpx 34rpx rgba(89, 65, 47, .075);
+  margin-bottom: 25rpx;
+  padding: 30rpx 24rpx 29rpx;
+  border: 1rpx solid rgba(82, 62, 48, .045);
+  border-radius: 34rpx;
+  background: rgba(255, 255, 255, .93);
+  box-shadow: 0 13rpx 36rpx rgba(91, 66, 47, .078);
+}
+
+.day-card::after {
+  position: absolute;
+  inset: 7rpx;
+  border: 1rpx solid rgba(238, 219, 204, .2);
+  border-radius: 28rpx;
+  content: '';
+  pointer-events: none;
+}
+
+.card-tape {
+  position: absolute;
+  z-index: 2;
+  top: -11rpx;
+  left: 24rpx;
+  width: 77rpx;
+  height: 24rpx;
+  opacity: .66;
+  background: #f5c8ce;
+  box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, .25);
+  transform: rotate(-7deg);
+}
+
+.day-card:nth-child(even) .card-tape {
+  background: #bfdcf5;
+  transform: rotate(-5deg);
 }
 
 .day-head {
+  position: relative;
+  z-index: 1;
   justify-content: space-between;
   align-items: baseline;
-  min-height: 47rpx;
-  margin-bottom: 17rpx;
+  min-height: 51rpx;
+  margin-bottom: 23rpx;
 }
 
 .day-date {
@@ -176,102 +304,221 @@
 }
 
 .day-title {
-  color: #111;
-  font-size: 34rpx;
-  font-weight: 750;
-  letter-spacing: -1rpx;
+  color: #171412;
+  font-size: 38rpx;
+  font-weight: 780;
+  letter-spacing: -.5rpx;
 }
 
 .weekday {
   margin-left: 24rpx;
-  color: #818181;
+  color: #7a7572;
   font-size: 23rpx;
+  font-weight: 500;
+}
+
+.day-note-wrap {
+  position: relative;
+  min-width: 0;
+  max-width: 288rpx;
 }
 
 .day-note {
-  max-width: 274rpx;
+  position: relative;
+  z-index: 1;
   min-height: 44rpx;
   padding: 0 4rpx;
   overflow: hidden;
-  color: #898989;
+  color: #a16f60;
   font-family: "STKaiti", "KaiTi", "PingFang SC", serif;
   font-size: 21rpx;
   line-height: 44rpx;
+  letter-spacing: .5rpx;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transform: rotate(-2deg);
+}
+
+.note-swash {
+  position: absolute;
+  right: 1rpx;
+  bottom: 0;
+  width: 82%;
+  height: 7rpx;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(249, 155, 140, .08), rgba(249, 155, 140, .32), rgba(255, 194, 139, .12));
+  transform: rotate(-4deg);
 }
 
 .meal-grid {
+  position: relative;
+  z-index: 1;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .meal-slot {
+  position: relative;
   box-sizing: border-box;
   width: 24%;
   min-width: 0;
-  padding: 0 3rpx 2rpx;
-  border-radius: 20rpx;
+  padding: 0 3rpx 3rpx;
+  border-radius: 23rpx;
   text-align: center;
+}
+
+.thumb-shell {
+  position: relative;
+  width: 116rpx;
+  height: 116rpx;
+  margin: 0 auto;
 }
 
 .thumb {
   display: block;
-  width: 108rpx;
-  height: 108rpx;
-  margin: 0 auto;
-  border-radius: 18rpx;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 1rpx solid rgba(76, 57, 43, .045);
+  border-radius: 22rpx;
   background: #f8efe7;
 }
 
+.has-record .thumb-shell {
+  filter: drop-shadow(0 7rpx 10rpx rgba(89, 62, 43, .1));
+}
+
+.has-record .thumb-shell::before {
+  position: absolute;
+  z-index: -1;
+  right: -5rpx;
+  bottom: -5rpx;
+  left: 8rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  background: rgba(236, 203, 169, .32);
+  content: '';
+  transform: rotate(-3deg);
+}
+
+.photo-shine {
+  position: absolute;
+  top: 6rpx;
+  right: 9rpx;
+  width: 25rpx;
+  height: 9rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .35);
+  transform: rotate(25deg);
+  pointer-events: none;
+}
+
 .placeholder {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d9b9a7;
-  background: linear-gradient(145deg, #fff9f4, #fbefe6);
+  border-color: rgba(151, 119, 93, .035);
+  color: #d6b39f;
+  background: linear-gradient(145deg, #fffdf9, #fbefe6);
+}
+
+.placeholder::after {
+  position: absolute;
+  inset: 7rpx;
+  border: 1rpx dashed rgba(169, 135, 111, .1);
+  border-radius: 16rpx;
+  content: '';
 }
 
 .placeholder text {
+  position: relative;
+  z-index: 1;
   font-size: 51rpx;
   font-weight: 300;
   line-height: 1;
 }
 
-.placeholder-sunrise { color: #ebb774; }
-.placeholder-lunch { color: #e0a87b; }
-.placeholder-dinner { color: #d8b19e; }
-.placeholder-late-night { color: #c5afd7; }
+.placeholder-sunrise { color: #eead56; background: linear-gradient(145deg, #fffdfa, #fff2dd); }
+.placeholder-lunch { color: #dda176; background: linear-gradient(145deg, #fffdfa, #f8f4e8); }
+.placeholder-dinner { color: #d5a18c; background: linear-gradient(145deg, #fffdfa, #fdf0e9); }
+.placeholder-late-night { color: #b9a5d2; background: linear-gradient(145deg, #fffdfa, #f4effc); }
 
 .meal-label {
-  margin-top: 10rpx;
+  margin-top: 12rpx;
   overflow: hidden;
-  color: #171717;
-  font-size: 25rpx;
-  font-weight: 650;
+  color: #211d1a;
+  font-size: 27rpx;
+  font-weight: 700;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meal-status {
-  margin-top: 3rpx;
-  color: #9a9a9a;
+  margin-top: 4rpx;
+  color: #98938f;
   font-size: 21rpx;
   line-height: 1.25;
 }
 
 .meal-status.recorded {
-  color: #63a96f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #52a568;
+  font-weight: 550;
 }
+
+.meal-status.recorded::before {
+  width: 8rpx;
+  height: 8rpx;
+  margin-right: 7rpx;
+  border-radius: 50%;
+  background: #76bd83;
+  box-shadow: 0 0 0 4rpx rgba(118, 189, 131, .1);
+  content: '';
+}
+
+.journal-tail {
+  position: relative;
+  height: 90rpx;
+  opacity: .68;
+}
+
+.tail-sprig {
+  position: absolute;
+  bottom: 2rpx;
+  left: 34rpx;
+  width: 75rpx;
+  height: 64rpx;
+  border-left: 3rpx solid #7ea578;
+  border-radius: 50%;
+  transform: rotate(-34deg);
+}
+
+.tail-sprig text {
+  position: absolute;
+  width: 24rpx;
+  height: 12rpx;
+  border-radius: 90% 10% 90% 10%;
+  background: #9aba91;
+}
+
+.tail-sprig text:nth-child(1) { top: 6rpx; left: -2rpx; transform: rotate(42deg); }
+.tail-sprig text:nth-child(2) { top: 25rpx; right: 44rpx; transform: rotate(137deg); }
+.tail-sprig text:nth-child(3) { top: 40rpx; left: -8rpx; transform: rotate(40deg); }
+.tail-heart { position: absolute; right: 43rpx; bottom: 8rpx; color: #e79080; font-size: 34rpx; transform: rotate(10deg); }
 
 .empty-state {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 450rpx - env(safe-area-inset-bottom));
-  padding: 16rpx 0 62rpx;
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--navigation-total) - 420rpx - env(safe-area-inset-bottom));
+  padding: 4rpx 0 58rpx;
+  flex-direction: column;
   text-align: center;
 }
 
@@ -296,8 +543,8 @@
 .plant {
   position: absolute;
   z-index: 1;
-  right: 62rpx;
   top: 70rpx;
+  right: 62rpx;
   width: 72rpx;
   height: 112rpx;
   transform: rotate(5deg);
@@ -305,8 +552,8 @@
 
 .stem {
   position: absolute;
-  left: 34rpx;
   bottom: 0;
+  left: 34rpx;
   width: 5rpx;
   height: 101rpx;
   border-radius: 3rpx;
@@ -329,8 +576,8 @@
 .cat-tail {
   position: absolute;
   z-index: 0;
-  left: 38rpx;
   bottom: 28rpx;
+  left: 38rpx;
   width: 50rpx;
   height: 79rpx;
   border: 8rpx solid #9b765f;
@@ -343,8 +590,8 @@
 .cat {
   position: absolute;
   z-index: 2;
-  left: 72rpx;
   bottom: 74rpx;
+  left: 72rpx;
   width: 176rpx;
   height: 111rpx;
   border: 6rpx solid #9b765f;
@@ -369,8 +616,8 @@
   position: absolute;
   z-index: 2;
   top: 38rpx;
-  left: 0;
   right: 0;
+  left: 0;
   color: #775846;
   font-size: 23rpx;
 }
@@ -396,8 +643,8 @@
 .box {
   position: absolute;
   z-index: 4;
-  left: 57rpx;
   bottom: 5rpx;
+  left: 57rpx;
   width: 217rpx;
   height: 102rpx;
   border-radius: 8rpx 8rpx 25rpx 25rpx;
@@ -427,9 +674,9 @@
 .right-fold { right: -1rpx; clip-path: polygon(100% 0, 0 67%, 0 100%, 100% 76%); }
 
 .empty-copy {
-  color: #1d1d1d;
+  color: #2d2825;
   font-size: 28rpx;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 .today-button {
@@ -443,7 +690,7 @@
   box-shadow: 0 11rpx 25rpx rgba(219, 105, 100, .13);
   color: #fff;
   font-size: 29rpx;
-  font-weight: 500;
+  font-weight: 550;
   line-height: 88rpx;
 }
 
@@ -469,16 +716,25 @@
 }
 
 @media (max-width: 340px) {
-  .page {
-    padding-right: 24rpx;
-    padding-left: 24rpx;
-  }
-
+  .page { padding-right: 23rpx; padding-left: 23rpx; }
+  .calendar-header { padding-right: 5rpx; padding-left: 5rpx; }
+  .title { font-size: 56rpx; }
   .subtitle { font-size: 23rpx; }
-  .day-card { padding-right: 15rpx; padding-left: 15rpx; }
+  .month-nav { width: 350rpx; }
+  .day-card { padding-right: 16rpx; padding-left: 16rpx; }
   .weekday { margin-left: 14rpx; }
-  .day-note { max-width: 220rpx; font-size: 19rpx; }
-  .thumb { width: 96rpx; height: 96rpx; }
-  .meal-label { font-size: 23rpx; }
+  .day-note-wrap { max-width: 228rpx; }
+  .day-note { font-size: 18rpx; }
+  .thumb-shell { width: 101rpx; height: 101rpx; }
+  .meal-label { font-size: 24rpx; }
   .meal-status { font-size: 19rpx; }
+}
+
+@media (max-height: 720px) {
+  .calendar-header { margin-bottom: 27rpx; }
+  .title { font-size: 55rpx; }
+  .subtitle { margin-top: 8rpx; }
+  .month-nav { min-height: 70rpx; margin-bottom: 28rpx; }
+  .day-card { margin-bottom: 21rpx; padding-top: 25rpx; padding-bottom: 25rpx; }
+  .thumb-shell { width: 106rpx; height: 106rpx; }
 }

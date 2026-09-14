@@ -2,6 +2,7 @@ const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
 const processingService = require('../../services/processing-service')
 const { displayDate, toDateKey, yesterdayKey } = require('../../utils/date')
+const { getNavigationMetrics } = require('../../utils/navigation')
 
 const SLOT_PRESENTATION = {
   breakfast: { icon: '☀', accent: 'sunrise' },
@@ -60,6 +61,7 @@ Page({
     statusBarHeight: 20,
     navigationBarHeight: 44,
     navigationTotalHeight: 64,
+    navigationRightInset: 109,
     todayKey: toDateKey(new Date()),
     dateLabel: '',
     dateTitle: '',
@@ -71,18 +73,7 @@ Page({
   },
 
   onLoad() {
-    try {
-      const systemInfo = wx.getSystemInfoSync()
-      const menuButton = wx.getMenuButtonBoundingClientRect()
-      const capsuleGap = Math.max(menuButton.top - systemInfo.statusBarHeight, 4)
-      this.setData({
-        statusBarHeight: systemInfo.statusBarHeight,
-        navigationBarHeight: menuButton.height + capsuleGap * 2,
-        navigationTotalHeight: systemInfo.statusBarHeight + menuButton.height + capsuleGap * 2
-      })
-    } catch (error) {
-      // Keep the safe defaults for older base libraries and test environments.
-    }
+    this.setData(getNavigationMetrics(wx))
   },
 
   onShow() {
@@ -208,9 +199,5 @@ Page({
 
   openYesterdayRecap() {
     wx.navigateTo({ url: `/pages/recap/index?dateKey=${yesterdayKey()}` })
-  },
-
-  openSettings() {
-    wx.navigateTo({ url: '/pages/settings/index' })
   }
 })

@@ -2,6 +2,7 @@ const mealService = require('../../services/meal-service')
 const imageStorage = require('../../services/image-storage')
 const processingService = require('../../services/processing-service')
 const { fromDateKey, toDateKey } = require('../../utils/date')
+const { getNavigationMetrics } = require('../../utils/navigation')
 
 const SLOT_PRESENTATION = {
   breakfast: { icon: '☀', accent: 'sunrise' },
@@ -47,7 +48,7 @@ function decorateSlot(slot) {
   return {
     ...slot,
     ...SLOT_PRESENTATION[slot.key],
-    imageSource: slot.record ? (slot.record.stylizedImage || slot.record.imagePath) : ''
+    imageSource: slot.record ? (slot.record.imagePath || slot.record.stylizedImage) : ''
   }
 }
 
@@ -66,6 +67,10 @@ function calendarDay(dateKey) {
 
 Page({
   data: {
+    statusBarHeight: 20,
+    navigationBarHeight: 44,
+    navigationTotalHeight: 64,
+    navigationRightInset: 109,
     todayKey: '',
     currentMonthKey: '',
     selectedDateKey: '',
@@ -77,6 +82,8 @@ Page({
   },
 
   onLoad(query) {
+    this.setData(getNavigationMetrics(wx))
+
     const todayKey = toDateKey(new Date())
     const requestedDateKey = query.dateKey && query.dateKey <= todayKey ? query.dateKey : todayKey
     this.selectedDateKey = requestedDateKey

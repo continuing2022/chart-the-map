@@ -33,13 +33,27 @@ test('home uses the top safe area and keeps all meal slots in one adaptive grid'
   const homeConfig = JSON.parse(read('pages/home/index.json'))
   const homeTemplate = read('pages/home/index.wxml')
   assert.equal(homeConfig.navigationStyle, 'custom')
-  assert.match(homeTemplate, /class="custom-nav"/)
+  assert.match(homeTemplate, /<app-nav/)
   assert.match(homeTemplate, /class="slot-list is-grid/)
   assert.doesNotMatch(homeTemplate, /is-mixed/)
   assert.match(read('pages/home/index.wxss'), /\.slot-list\.is-grid[^}]*flex:\s*1/)
   for (const asset of ['meal-breakfast.png', 'meal-lunch.png', 'meal-dinner.png', 'meal-late-night.png']) {
     assert.match(homeTemplate, new RegExp(`/assets/${asset.replace('.', '\\.')}`))
   }
+})
+
+test('home and calendar share one safe-area-aware brand navigation component', () => {
+  const homeConfig = JSON.parse(read('pages/home/index.json'))
+  const calendarConfig = JSON.parse(read('pages/calendar/index.json'))
+  const homeTemplate = read('pages/home/index.wxml')
+  const calendarTemplate = read('pages/calendar/index.wxml')
+  assert.equal(calendarConfig.navigationStyle, 'custom')
+  assert.equal(homeConfig.usingComponents['app-nav'], '/components/app-nav/index')
+  assert.equal(calendarConfig.usingComponents['app-nav'], '/components/app-nav/index')
+  assert.match(homeTemplate, /<app-nav[^>]*right-safe-width="\{\{navigationRightInset\}\}"/)
+  assert.match(calendarTemplate, /<app-nav[^>]*right-safe-width="\{\{navigationRightInset\}\}"/)
+  assert.match(read('components/app-nav/index.wxml'), /食光日记[\s\S]*AI 饮食日记/)
+  assert.match(read('utils/navigation.js'), /getMenuButtonBoundingClientRect/)
 })
 
 test('calendar returns to today without adding or popping a route', () => {

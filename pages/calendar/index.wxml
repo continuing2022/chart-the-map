@@ -1,7 +1,16 @@
-<view class="page {{showEmptyState ? 'is-empty' : ''}}">
+<app-nav status-bar-height="{{statusBarHeight}}" navigation-bar-height="{{navigationBarHeight}}" right-safe-width="{{navigationRightInset}}"></app-nav>
+
+<view class="page {{showEmptyState ? 'is-empty' : ''}}" style="--navigation-total: {{navigationTotalHeight}}px;">
+  <view class="paper-glow glow-apricot" aria-hidden="true"></view>
+  <view class="paper-glow glow-blue" aria-hidden="true"></view>
+
   <view class="calendar-header">
     <view class="header-copy">
-      <view class="title">日历</view>
+      <view class="title-wrap">
+        <view class="title">日历</view>
+        <view class="title-swash" aria-hidden="true"></view>
+        <view class="title-rays" aria-hidden="true"><text></text><text></text><text></text></view>
+      </view>
       <view class="subtitle">每一餐，都是生活的一小段回忆</view>
     </view>
     <picker mode="date" value="{{selectedDateKey}}" end="{{todayKey}}" bindchange="chooseDate">
@@ -24,23 +33,35 @@
 
   <view wx:if="{{days.length}}" class="day-list">
     <view wx:for="{{days}}" wx:for-item="day" wx:key="dateKey" class="day-card">
+      <view class="card-tape" aria-hidden="true"></view>
       <view class="day-head">
         <view class="day-date">
           <text class="day-title">{{day.dateTitle}}</text>
           <text class="weekday">{{day.weekdayLabel}}</text>
         </view>
-        <view wx:if="{{day.hasRecords}}" class="day-note tap-target" hover-class="tap-soft" catchtap="openRecap" data-date-key="{{day.dateKey}}">{{day.note}}</view>
-        <view wx:else class="day-note">为这天留下一点食光</view>
+        <view class="day-note-wrap">
+          <view wx:if="{{day.hasRecords}}" class="day-note tap-target" hover-class="tap-soft" catchtap="openRecap" data-date-key="{{day.dateKey}}">{{day.note}}</view>
+          <view wx:else class="day-note">为这天留下一点食光</view>
+          <view class="note-swash" aria-hidden="true"></view>
+        </view>
       </view>
 
       <view class="meal-grid">
-        <view wx:for="{{day.slots}}" wx:for-item="slot" wx:key="key" class="meal-slot tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}" data-date-key="{{day.dateKey}}" data-id="{{slot.record ? slot.record.id : ''}}">
-          <image wx:if="{{slot.record}}" class="thumb" src="{{slot.imageSource}}" mode="aspectFill" />
-          <view wx:else class="thumb placeholder placeholder-{{slot.accent}}"><text>{{slot.icon}}</text></view>
+        <view wx:for="{{day.slots}}" wx:for-item="slot" wx:key="key" class="meal-slot meal-slot-{{slot.accent}} {{slot.record ? 'has-record' : 'is-missing'}} tap-card" hover-class="tap-card-active" bindtap="chooseSource" data-slot="{{slot}}" data-date-key="{{day.dateKey}}" data-id="{{slot.record ? slot.record.id : ''}}">
+          <view class="thumb-shell">
+            <image wx:if="{{slot.record}}" class="thumb" src="{{slot.imageSource}}" mode="aspectFill" />
+            <view wx:else class="thumb placeholder placeholder-{{slot.accent}}"><text>{{slot.icon}}</text></view>
+            <view wx:if="{{slot.record}}" class="photo-shine" aria-hidden="true"></view>
+          </view>
           <view class="meal-label">{{slot.label}}</view>
           <view class="meal-status {{slot.record ? 'recorded' : ''}}">{{slot.record ? '已记录' : '未记录'}}</view>
         </view>
       </view>
+    </view>
+
+    <view class="journal-tail" aria-hidden="true">
+      <view class="tail-sprig"><text></text><text></text><text></text></view>
+      <view class="tail-heart">♡</view>
     </view>
   </view>
 
