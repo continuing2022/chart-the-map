@@ -34,8 +34,26 @@ function loadConfig(overrides = {}) {
     mutationLimitPerMinute: numberFromEnv('MUTATION_LIMIT_PER_MINUTE', 60),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
     allowLocalPocProvider: booleanFromEnv('ALLOW_LOCAL_POC_PROVIDER'),
+    assetStorage: process.env.ASSET_STORAGE || '',
+    cosBucket: process.env.COS_BUCKET || '',
+    cosRegion: process.env.COS_REGION || '',
+    cosSecretId: process.env.COS_SECRET_ID || '',
+    cosSecretKey: process.env.COS_SECRET_KEY || '',
+    cosKeyPrefix: process.env.COS_KEY_PREFIX || 'private',
+    cosTimeoutMs: numberFromEnv('COS_TIMEOUT_MS', 15000),
     ...overrides
   }
+  const cosValues = [config.cosBucket, config.cosRegion, config.cosSecretId, config.cosSecretKey]
+  const hasAnyCosValue = cosValues.some(Boolean)
+  const hasAllCosValues = cosValues.every(Boolean)
+  if (!config.assetStorage) config.assetStorage = hasAllCosValues ? 'cos' : 'memory'
+  if (!['memory', 'cos'].includes(config.assetStorage)) throw new Error('ASSET_STORAGE 只允许 memory 或 cos。')
+  if (config.assetStorage === 'cos' && !hasAllCosValues) {
+    throw new Error('COS 存储需要完整配置 COS_BUCKET、COS_REGION、COS_SECRET_ID 和 COS_SECRET_KEY。')
+  }
+  if (hasAnyCosValue && !hasAllCosValues) throw new Error('COS 环境变量配置不完整。')
+  config.cosKeyPrefix = String(config.cosKeyPrefix || '').replace(/^\/+|\/+$/g, '')
+  if (!config.cosKeyPrefix || config.cosKeyPrefix.includes('..')) throw new Error('COS_KEY_PREFIX 无效。')
   if (!['dev', 'wechat'].includes(config.authMode)) throw new Error('AUTH_MODE 只允许 dev 或 wechat。')
   if (production && config.authMode !== 'wechat') throw new Error('生产环境只能使用 AUTH_MODE=wechat。')
   if (!config.tokenSecret || !config.assetSigningSecret || config.tokenSecret.length < 32 || config.assetSigningSecret.length < 32) {

@@ -37,6 +37,8 @@ npm start
 - `PUBLIC_BASE_URL=https://你的已备案API域名`
 - `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET`
 - 分别随机生成的 `TOKEN_SECRET` 与 `ASSET_SIGNING_SECRET`
+- `ASSET_STORAGE=cos`
+- `COS_BUCKET`、`COS_REGION`、`COS_SECRET_ID`、`COS_SECRET_KEY` 和 `COS_KEY_PREFIX=private`
 
 其余上传、时效、限流、成本和端口参数见根目录 `.env.example`。不要把任何真实值提交到仓库，也不要把微信 AppSecret、腾讯云 SecretId/SecretKey 或混元密钥放入 `config/runtime.js`。
 
@@ -51,14 +53,15 @@ docker run --rm -p 3000:3000 --env-file <服务端私有环境文件> meal-diary
 
 ## 必须替换的生产边界
 
-`providers/local-provider.js` 会让内容安全直接通过、复制原始图片作为风格化结果，并返回固定营养估算；`app.js` 中的 Map 会把照片、任务、预算和餐食保存在单个进程内。这个组合不能承载真实用户数据，也无法在重启或多实例之间保持一致。
+配置完整 COS 环境变量后，服务会自动使用私有 COS 保存原图和生成图，并为生成图签发短时下载地址；对象键按用户哈希隔离，删除餐食时会同步删除相关对象。未配置 COS 时仍使用仅供测试的内存存储。
+
+`providers/local-provider.js` 仍会让内容安全直接通过、复制原始图片作为风格化结果，并返回固定营养估算；`app.js` 中的 Map 仍会把图片元数据、任务、预算和餐食保存在单个进程内。COS 解决了图片二进制持久化，但这个组合仍不能承载真实用户数据，也无法在重启或多实例之间保持业务状态一致。
 
 公网联调前必须完成：
 
-1. 把照片资源层替换为当前用户私有前缀下的腾讯云 COS，并由后端签发短时读地址。
-2. 把任务 Provider 替换为混元、营养识别和腾讯云内容安全调用；为晚到结果保留现有任务版本检查。
-3. 把餐食、任务、幂等键、删除状态、预算台账和限流状态迁移到共享数据库/缓存；部署持久任务队列和失败清理任务。
-4. 使用工作负载角色或最小权限子账号，将全部长期凭证放入受管密钥服务。
-5. 配置 HTTPS、微信 request/uploadFile/downloadFile 合法域名，再按契约清单完成开发者工具和真机验收。
+1. 把任务 Provider 替换为混元、营养识别和腾讯云内容安全调用；为晚到结果保留现有任务版本检查。
+2. 把餐食、任务、图片元数据、幂等键、删除状态、预算台账和限流状态迁移到共享数据库/缓存；部署持久任务队列和失败清理任务。
+3. 使用工作负载角色或最小权限子账号，将全部长期凭证放入受管密钥服务。
+4. 把 COS 下载域名加入微信 `downloadFile` 合法域名，并按契约清单完成开发者工具和真机验收。
 
 自动化验证命令为 `npm test` 与 `npm run check`。

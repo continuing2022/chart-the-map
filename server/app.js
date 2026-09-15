@@ -3,6 +3,7 @@ const http = require('node:http')
 const { loadConfig } = require('./config')
 const { validateAndSanitizeImage } = require('./image-safety')
 const { createLocalProvider } = require('./providers/local-provider')
+const { createAssetStore } = require('./storage')
 const {
   createAccessToken,
   createAssetSignature,
@@ -109,6 +110,7 @@ function createApplication(options = {}) {
     throw new Error('生产环境拒绝默认 local-poc Provider；仅隔离联调可显式设置 ALLOW_LOCAL_POC_PROVIDER=true。')
   }
   const provider = options.provider || createLocalProvider()
+  const assetStore = options.assetStore || createAssetStore(config)
   const state = {
     assets: new Map(),
     uploadsByClientId: new Map(),
@@ -153,8 +155,11 @@ function createApplication(options = {}) {
     state.costsByOwner.set(owner, Math.round((current + amount) * 10000) / 10000)
   }
 
-  function assetUrl(request, assetId) {
+  async function assetUrl(request, asset) {
     const imageExpiresAt = Date.now() + config.assetUrlTtlMs
+    const signedUrl = await assetStore.getSignedUrl(asset.objectKey, config.assetUrlTtlMs / 1000)
+    if (signedUrl) return { imageUrl: signedUrl, imageExpiresAt }
+    const assetId = asset.id
     const signature = createAssetSignature(assetId, imageExpiresAt, config)
     return {
       imageUrl: `${publicBaseUrl(request, config)}/v1/assets/${encodeURIComponent(assetId)}?expires=${imageExpiresAt}&signature=${encodeURIComponent(signature)}`,
@@ -162,7 +167,7 @@ function createApplication(options = {}) {
     }
   }
 
-  function taskSnapshot(request, task) {
+  async function taskSnapshot(request, task) {
     const snapshot = {
       id: task.id,
       clientTaskId: task.clientTaskId,
@@ -171,17 +176,25 @@ function createApplication(options = {}) {
     if (task.completedAt) snapshot.completedAt = task.completedAt
     if (task.error) snapshot.error = task.error
     if (task.result) {
-      snapshot.result = task.type === 'stylization'
-        ? { assetId: task.result.assetId, ...assetUrl(request, task.result.assetId) }
-        : { nutrition: task.result.nutrition }
+      if (task.type === 'stylization') {
+        const asset = state.assets.get(task.result.assetId)
+        if (!asset || asset.deleted) throw new Error('风格化图片资源不存在。')
+        snapshot.result = { assetId: asset.id, ...await assetUrl(request, asset) }
+      } else {
+        snapshot.result = { nutrition: task.result.nutrition }
+      }
     }
     return snapshot
   }
 
-  function mealSnapshot(request, meal) {
+  async function mealSnapshot(request, meal) {
+    const [stylization, nutrition] = await Promise.all([
+      taskSnapshot(request, meal.tasks.stylization),
+      taskSnapshot(request, meal.tasks.nutrition)
+    ])
     const tasks = {
-      stylization: taskSnapshot(request, meal.tasks.stylization),
-      nutrition: taskSnapshot(request, meal.tasks.nutrition)
+      stylization,
+      nutrition
     }
     const statuses = Object.values(tasks).map((task) => task.status)
     const status = statuses.every((value) => value === 'completed')
@@ -203,16 +216,27 @@ function createApplication(options = {}) {
     }
   }
 
-  function addAsset(owner, source) {
+  function assetObjectKey(owner, kind, assetId, mimeType) {
+    const ownerHash = crypto.createHash('sha256').update(String(owner)).digest('hex')
+    const safeKind = kind === 'stylized' ? 'stylized' : 'original'
+    const extension = mimeType === 'image/jpeg' ? 'jpg' : 'png'
+    return `${config.cosKeyPrefix}/users/${ownerHash}/${safeKind}/${assetId}.${extension}`
+  }
+
+  async function addAsset(owner, source) {
+    const id = `asset_${crypto.randomUUID()}`
+    const kind = source.kind || 'original'
+    const objectKey = assetObjectKey(owner, kind, id, source.mimeType)
+    await assetStore.put({ key: objectKey, buffer: source.buffer, mimeType: source.mimeType })
     const asset = {
-      id: `asset_${crypto.randomUUID()}`,
+      id,
       owner,
-      buffer: Buffer.from(source.buffer),
+      objectKey,
       mimeType: source.mimeType,
       width: source.width,
       height: source.height,
       boundMealId: source.boundMealId || '',
-      kind: source.kind || 'original',
+      kind,
       deleted: false,
       createdAt: Date.now()
     }
@@ -226,10 +250,14 @@ function createApplication(options = {}) {
     const task = meal.tasks[type]
     try {
       const originalAsset = state.assets.get(meal.originalAssetId)
-      if (!originalAsset || originalAsset.deleted) throw new Error('原始照片已不存在。')
+      if (!originalAsset || originalAsset.deleted || meal.deleting) throw new Error('原始照片已不存在。')
+      const originalWithBuffer = {
+        ...originalAsset,
+        buffer: await assetStore.get(originalAsset.objectKey)
+      }
       if (type === 'stylization') {
-        const output = await provider.stylize({ meal, originalAsset })
-        const asset = addAsset(meal.owner, {
+        const output = await provider.stylize({ meal, originalAsset: originalWithBuffer })
+        const asset = await addAsset(meal.owner, {
           buffer: output.buffer,
           mimeType: output.mimeType,
           width: originalAsset.width,
@@ -237,15 +265,15 @@ function createApplication(options = {}) {
           boundMealId: meal.id,
           kind: 'stylized'
         })
-        if (meal.deleted || meal.tasks[type].id !== taskId) {
+        if (meal.deleted || meal.deleting || meal.tasks[type].id !== taskId) {
+          await assetStore.delete(asset.objectKey)
           asset.deleted = true
-          asset.buffer = Buffer.alloc(0)
           return
         }
         task.result = { assetId: asset.id }
       } else {
-        const nutrition = validateNutrition(await provider.analyzeNutrition({ meal, originalAsset }))
-        if (meal.deleted || meal.tasks[type].id !== taskId) return
+        const nutrition = validateNutrition(await provider.analyzeNutrition({ meal, originalAsset: originalWithBuffer }))
+        if (meal.deleted || meal.deleting || meal.tasks[type].id !== taskId) return
         task.result = { nutrition }
         if (meal.manuallyConfirmed) meal.candidateNutrition = nutrition
         else meal.nutrition = nutrition
@@ -322,7 +350,7 @@ function createApplication(options = {}) {
     const method = request.method || 'GET'
 
     if (method === 'GET' && url.pathname === '/health') {
-      return sendJson(response, 200, { ok: true, provider: provider.name || 'custom' })
+      return sendJson(response, 200, { ok: true, provider: provider.name || 'custom', storage: assetStore.name || 'custom' })
     }
 
     if (method === 'POST' && url.pathname === '/v1/auth/wechat') {
@@ -341,13 +369,22 @@ function createApplication(options = {}) {
       }
       const asset = state.assets.get(assetId)
       if (!asset || asset.deleted) throw appError(404, 'ASSET_NOT_FOUND', '照片资源不存在。')
+      let buffer
+      try {
+        buffer = await assetStore.get(asset.objectKey)
+      } catch (error) {
+        if (error && (error.code === 'ASSET_OBJECT_NOT_FOUND' || error.statusCode === 404)) {
+          throw appError(404, 'ASSET_NOT_FOUND', '照片资源不存在。')
+        }
+        throw error
+      }
       response.writeHead(200, {
         'Cache-Control': 'private, max-age=60',
-        'Content-Length': asset.buffer.length,
+        'Content-Length': buffer.length,
         'Content-Type': asset.mimeType,
         'X-Content-Type-Options': 'nosniff'
       })
-      return response.end(asset.buffer)
+      return response.end(buffer)
     }
 
     const owner = parseBearer(request, config)
@@ -365,7 +402,7 @@ function createApplication(options = {}) {
       const safeImage = validateAndSanitizeImage(upload.file.buffer, upload.file.mimeType, config)
       const moderation = await provider.moderateImage({ ...safeImage, mimeType: upload.file.mimeType, owner })
       if (!moderation || moderation.safe !== true) throw appError(422, 'IMAGE_REJECTED', '照片未通过内容安全检查。')
-      const asset = addAsset(owner, { ...safeImage, mimeType: upload.file.mimeType })
+      const asset = await addAsset(owner, { ...safeImage, mimeType: upload.file.mimeType })
       state.uploadsByClientId.set(key, asset.id)
       return sendJson(response, 201, { asset: { id: asset.id } })
     }
@@ -375,7 +412,7 @@ function createApplication(options = {}) {
       const clientRecordId = requiredString(body.clientRecordId, 'clientRecordId')
       const key = ownerKey(owner, clientRecordId)
       const existingId = state.mealsByClientId.get(key)
-      if (existingId) return sendJson(response, 200, mealSnapshot(request, ownedMeal(owner, existingId)))
+      if (existingId) return sendJson(response, 200, await mealSnapshot(request, ownedMeal(owner, existingId)))
       const dateKey = requiredString(body.dateKey, 'dateKey', 10)
       const slotKey = requiredString(body.slotKey, 'slotKey', 20)
       const style = requiredString(body.style, 'style', 20)
@@ -406,7 +443,7 @@ function createApplication(options = {}) {
       asset.boundMealId = meal.id
       scheduleTask(meal, 'stylization', stylizationId)
       scheduleTask(meal, 'nutrition', nutritionId)
-      return sendJson(response, 201, mealSnapshot(request, meal))
+      return sendJson(response, 201, await mealSnapshot(request, meal))
     }
 
     const mealMatch = /^\/v1\/meals\/([^/]+)$/.exec(url.pathname)
@@ -415,22 +452,28 @@ function createApplication(options = {}) {
       if (method === 'DELETE') {
         const meal = state.meals.get(mealId)
         if (!meal || meal.deleted || meal.owner !== owner) return sendEmpty(response)
-        meal.deleted = true
-        for (const asset of state.assets.values()) {
-          if (asset.owner === owner && (asset.id === meal.originalAssetId || asset.boundMealId === meal.id)) {
+        meal.deleting = true
+        try {
+          const assets = [...state.assets.values()].filter((asset) => (
+            !asset.deleted && asset.owner === owner && (asset.id === meal.originalAssetId || asset.boundMealId === meal.id)
+          ))
+          await Promise.all(assets.map(async (asset) => {
+            await assetStore.delete(asset.objectKey)
             asset.deleted = true
-            asset.buffer = Buffer.alloc(0)
-          }
+          }))
+          meal.deleted = true
+        } finally {
+          meal.deleting = false
         }
         return sendEmpty(response)
       }
       const meal = ownedMeal(owner, mealId)
-      if (method === 'GET') return sendJson(response, 200, mealSnapshot(request, meal))
+      if (method === 'GET') return sendJson(response, 200, await mealSnapshot(request, meal))
       if (method === 'PATCH') {
         const body = await readJson(request)
         if (typeof body.note !== 'string' || body.note.length > 1000) throw appError(400, 'INVALID_NOTE', '备注长度不能超过 1000 个字符。')
         meal.note = body.note
-        return sendJson(response, 200, mealSnapshot(request, meal))
+        return sendJson(response, 200, await mealSnapshot(request, meal))
       }
     }
 
@@ -441,7 +484,7 @@ function createApplication(options = {}) {
       if (!TASK_TYPES.has(type)) throw appError(404, 'TASK_TYPE_NOT_FOUND', '处理任务类型不存在。')
       const body = await readJson(request)
       const clientTaskId = requiredString(body.clientTaskId, 'clientTaskId')
-      if (meal.usedTaskClientIds[type].has(clientTaskId)) return sendJson(response, 200, mealSnapshot(request, meal))
+      if (meal.usedTaskClientIds[type].has(clientTaskId)) return sendJson(response, 200, await mealSnapshot(request, meal))
       if (type === 'stylization') {
         const style = requiredString(body.style, 'style', 20)
         if (!STYLES.has(style)) throw appError(400, 'INVALID_STYLE', '风格选项无效。')
@@ -451,7 +494,7 @@ function createApplication(options = {}) {
         reserveCost(owner, config.nutritionCostCny)
       }
       scheduleTask(meal, type, clientTaskId)
-      return sendJson(response, 200, mealSnapshot(request, meal))
+      return sendJson(response, 200, await mealSnapshot(request, meal))
     }
 
     const nutritionMatch = /^\/v1\/meals\/([^/]+)\/nutrition$/.exec(url.pathname)
@@ -461,15 +504,15 @@ function createApplication(options = {}) {
       if (body.manuallyConfirmed !== true) throw appError(400, 'CONFIRMATION_REQUIRED', '必须明确标记为人工确认。')
       meal.nutrition = validateNutrition(body.nutrition)
       meal.manuallyConfirmed = true
-      return sendJson(response, 200, mealSnapshot(request, meal))
+      return sendJson(response, 200, await mealSnapshot(request, meal))
     }
 
     const uploadMatch = /^\/v1\/uploads\/([^/]+)$/.exec(url.pathname)
     if (method === 'DELETE' && uploadMatch) {
       const asset = state.assets.get(decodeURIComponent(uploadMatch[1]))
       if (asset && !asset.deleted && asset.owner === owner && !asset.boundMealId) {
+        await assetStore.delete(asset.objectKey)
         asset.deleted = true
-        asset.buffer = Buffer.alloc(0)
       }
       return sendEmpty(response)
     }
@@ -489,7 +532,7 @@ function createApplication(options = {}) {
     })
   }
 
-  return { config, handler, state }
+  return { assetStore, config, handler, state }
 }
 
 function createServer(options) {

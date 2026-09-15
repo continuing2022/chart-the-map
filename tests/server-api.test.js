@@ -78,7 +78,7 @@ async function createMeal(token, assetId, overrides = {}) {
 test('health endpoint exposes the active provider without credentials', async () => {
   const response = await fetch(`${baseUrl}/health`)
   assert.equal(response.status, 200)
-  assert.deepEqual(await response.json(), { ok: true, provider: 'local-poc' })
+  assert.deepEqual(await response.json(), { ok: true, provider: 'local-poc', storage: 'memory' })
 })
 
 test('short sessions isolate users and reject missing credentials', async () => {

@@ -29,9 +29,9 @@ Node.js 20 以上可直接运行，不需要安装第三方依赖：
 npm start
 ```
 
-默认开发模式监听 `http://localhost:3000`，使用本地内存 Provider 验证短期会话、JPEG/PNG 受限上传、EXIF/文本元数据移除、用户隔离、幂等餐食与任务、人工确认保护、短时签名图片、限流、100 元预算闸门和幂等删除。`GET /health` 可检查服务状态，`npm test` 会通过真实 HTTP 与 multipart 请求执行契约集成测试。
+默认开发模式监听 `http://localhost:3000`，使用本地内存 Provider 验证短期会话、JPEG/PNG 受限上传、EXIF/文本元数据移除、用户隔离、幂等餐食与任务、人工确认保护、短时签名图片、限流、100 元预算闸门和幂等删除。配置完整 COS 环境变量后，原图和生成图会写入私有腾讯云 COS；`GET /health` 的 `storage` 字段可确认当前使用 `memory` 还是 `cos`。`npm test` 会通过真实 HTTP 与 multipart 请求执行契约集成测试。
 
-生产环境变量示例见 [`.env.example`](./.env.example)，容器入口见 [`Dockerfile`](./Dockerfile)，部署边界和限制见 [`server/README.md`](./server/README.md)。当前本地 Provider 会把照片和状态保存在进程内，并用原始照片模拟风格化输出；它只能用于 POC 联调，不能替代私有 COS、混元、内容安全和共享数据库。完成这些替换并获得公网 HTTPS 域名之前，不要把小程序默认模式切为 `remote`。
+生产环境变量示例见 [`.env.example`](./.env.example)，容器入口见 [`Dockerfile`](./Dockerfile)，部署边界和限制见 [`server/README.md`](./server/README.md)。当前本地 Provider 仍用原始照片模拟风格化输出，并将业务状态保存在进程内；COS 只解决图片二进制持久化，不能替代混元、内容安全和共享数据库。完成这些替换并获得公网 HTTPS 域名之前，不要向真实用户开放。
 
 ## 第二阶段 · 第一批增量
 
