@@ -400,9 +400,9 @@ function createApplication(options = {}) {
         if (existing && !existing.deleted) return sendJson(response, 200, { asset: { id: existing.id } })
       }
       const safeImage = validateAndSanitizeImage(upload.file.buffer, upload.file.mimeType, config)
-      const moderation = await provider.moderateImage({ ...safeImage, mimeType: upload.file.mimeType, owner })
+      const moderation = await provider.moderateImage({ ...safeImage, owner })
       if (!moderation || moderation.safe !== true) throw appError(422, 'IMAGE_REJECTED', '照片未通过内容安全检查。')
-      const asset = await addAsset(owner, { ...safeImage, mimeType: upload.file.mimeType })
+      const asset = await addAsset(owner, safeImage)
       state.uploadsByClientId.set(key, asset.id)
       return sendJson(response, 201, { asset: { id: asset.id } })
     }

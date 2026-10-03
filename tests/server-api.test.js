@@ -3,6 +3,7 @@ const { after, before, test } = require('node:test')
 const { createServer } = require('../server/app')
 
 const PNG_1X1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64')
+const JPEG_2X2 = Buffer.from('/9j/4AAQSkZJRgABAQEAkACQAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD8qqKKKAP/2Q==', 'base64')
 
 let server
 let baseUrl
@@ -91,6 +92,35 @@ test('short sessions isolate users and reject missing credentials', async () => 
   const deletion = await authenticated(otherToken, `/v1/uploads/${uploaded.asset.id}`, { method: 'DELETE' })
   assert.equal(deletion.status, 204)
   assert.equal(server.application.state.assets.get(uploaded.asset.id).deleted, false)
+})
+
+test('uploads valid JPEG bytes despite an incorrect multipart MIME and removes EXIF', async () => {
+  const token = await login('jpeg-user')
+  const exif = Buffer.from([0xff, 0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00])
+  const image = Buffer.concat([JPEG_2X2.subarray(0, 2), exif, JPEG_2X2.subarray(2)])
+  const form = new FormData()
+  form.append('clientRecordId', 'jpeg-meal-1')
+  form.append('dateKey', '2026-09-12')
+  form.append('slotKey', 'lunch')
+  form.append('file', new Blob([image], { type: 'image/png' }), 'meal.jpg')
+
+  const response = await authenticated(token, '/v1/uploads', { method: 'POST', body: form })
+  assert.equal(response.status, 201, JSON.stringify(await response.clone().json()))
+  const asset = server.application.state.assets.get((await response.json()).asset.id)
+  assert.equal(asset.mimeType, 'image/jpeg')
+  assert.equal(asset.width, 2)
+  assert.equal(asset.height, 2)
+  assert.deepEqual(await server.application.assetStore.get(asset.objectKey), JPEG_2X2)
+
+  const genericMimeForm = new FormData()
+  genericMimeForm.append('clientRecordId', 'jpeg-meal-2')
+  genericMimeForm.append('dateKey', '2026-09-12')
+  genericMimeForm.append('slotKey', 'dinner')
+  genericMimeForm.append('file', new Blob([JPEG_2X2], { type: 'application/octet-stream' }), 'meal.jpg')
+  const genericMimeResponse = await authenticated(token, '/v1/uploads', { method: 'POST', body: genericMimeForm })
+  assert.equal(genericMimeResponse.status, 201, JSON.stringify(await genericMimeResponse.clone().json()))
+  const genericMimeAsset = server.application.state.assets.get((await genericMimeResponse.json()).asset.id)
+  assert.equal(genericMimeAsset.mimeType, 'image/jpeg')
 })
 
 test('multipart upload and meal creation are idempotent and tasks complete independently', async () => {
