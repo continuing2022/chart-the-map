@@ -4,6 +4,7 @@ const { loadConfig } = require('./config')
 const { validateAndSanitizeImage } = require('./image-safety')
 const { createLocalProvider } = require('./providers/local-provider')
 const { createAssetStore } = require('./storage')
+const persistentState = require('./db/state-store')
 const {
   createAccessToken,
   createAssetSignature,
@@ -111,6 +112,7 @@ function createApplication(options = {}) {
   }
   const provider = options.provider || createLocalProvider()
   const assetStore = options.assetStore || createAssetStore(config)
+  const databasePool = options.databasePool || null
   const state = {
     assets: new Map(),
     uploadsByClientId: new Map(),
@@ -153,6 +155,11 @@ function createApplication(options = {}) {
       throw appError(429, 'POC_BUDGET_EXCEEDED', '已达到 POC 预算上限，新的生成任务已停止。')
     }
     state.costsByOwner.set(owner, Math.round((current + amount) * 10000) / 10000)
+  }
+
+  function releaseCost(owner, amount) {
+    const current = state.costsByOwner.get(owner) || 0
+    state.costsByOwner.set(owner, Math.max(0, Math.round((current - amount) * 10000) / 10000))
   }
 
   async function assetUrl(request, asset) {
@@ -231,6 +238,7 @@ function createApplication(options = {}) {
     const asset = {
       id,
       owner,
+      clientRecordId: source.clientRecordId || '',
       objectKey,
       mimeType: source.mimeType,
       width: source.width,
@@ -240,7 +248,13 @@ function createApplication(options = {}) {
       deleted: false,
       createdAt: Date.now()
     }
-    state.assets.set(asset.id, asset)
+    try {
+      if (databasePool) await persistentState.insertAsset(databasePool, asset)
+      state.assets.set(asset.id, asset)
+    } catch (error) {
+      await assetStore.delete(objectKey).catch(() => {})
+      throw error
+    }
     return asset
   }
 
@@ -268,6 +282,7 @@ function createApplication(options = {}) {
         if (meal.deleted || meal.deleting || meal.tasks[type].id !== taskId) {
           await assetStore.delete(asset.objectKey)
           asset.deleted = true
+          if (databasePool) await persistentState.markAssetDeleted(databasePool, asset)
           return
         }
         task.result = { assetId: asset.id }
@@ -280,15 +295,18 @@ function createApplication(options = {}) {
       }
       task.status = 'completed'
       task.completedAt = Date.now()
+      if (databasePool) await persistentState.persistTask(databasePool, meal, task)
     } catch (error) {
       if (!meal.deleted && meal.tasks[type].id === taskId) {
         task.status = 'failed'
         task.error = { message: '云端处理失败，请稍后重试。' }
+        task.completedAt = Date.now()
+        if (databasePool) await persistentState.persistTask(databasePool, meal, task).catch(() => {})
       }
     }
   }
 
-  function scheduleTask(meal, type, clientTaskId) {
+  function buildTask(meal, type, clientTaskId) {
     const task = {
       id: `task_${type}_${crypto.randomUUID()}`,
       type,
@@ -300,9 +318,25 @@ function createApplication(options = {}) {
     }
     meal.tasks[type] = task
     meal.usedTaskClientIds[type].add(clientTaskId)
+    return task
+  }
+
+  function activateTask(meal, task) {
+    const type = task.type
     const timer = setTimeout(() => completeTask(meal.id, type, task.id), config.taskDelayMs)
     if (typeof timer.unref === 'function') timer.unref()
     return task
+  }
+
+  async function initialize() {
+    if (!databasePool) return
+    await persistentState.hydrateState(databasePool, state)
+    for (const meal of state.meals.values()) {
+      if (meal.deleted || meal.deleting) continue
+      for (const task of Object.values(meal.tasks)) {
+        if (task && task.status === 'processing') activateTask(meal, task)
+      }
+    }
   }
 
   async function exchangeWechatCode(code) {
@@ -350,7 +384,12 @@ function createApplication(options = {}) {
     const method = request.method || 'GET'
 
     if (method === 'GET' && url.pathname === '/health') {
-      return sendJson(response, 200, { ok: true, provider: provider.name || 'custom', storage: assetStore.name || 'custom' })
+      return sendJson(response, 200, {
+        ok: true,
+        provider: provider.name || 'custom',
+        storage: assetStore.name || 'custom',
+        ...(databasePool ? { database: 'postgres', persistence: 'postgres' } : {})
+      })
     }
 
     if (method === 'POST' && url.pathname === '/v1/auth/wechat') {
@@ -402,7 +441,7 @@ function createApplication(options = {}) {
       const safeImage = validateAndSanitizeImage(upload.file.buffer, upload.file.mimeType, config)
       const moderation = await provider.moderateImage({ ...safeImage, owner })
       if (!moderation || moderation.safe !== true) throw appError(422, 'IMAGE_REJECTED', '照片未通过内容安全检查。')
-      const asset = await addAsset(owner, safeImage)
+      const asset = await addAsset(owner, { ...safeImage, clientRecordId: upload.clientRecordId })
       state.uploadsByClientId.set(key, asset.id)
       return sendJson(response, 201, { asset: { id: asset.id } })
     }
@@ -421,7 +460,8 @@ function createApplication(options = {}) {
       if (asset.boundMealId) throw appError(409, 'ASSET_ALREADY_BOUND', '照片已经绑定到另一条餐食记录。')
       const stylizationId = requiredString(body.tasks && body.tasks.stylization && body.tasks.stylization.clientTaskId, 'stylization clientTaskId')
       const nutritionId = requiredString(body.tasks && body.tasks.nutrition && body.tasks.nutrition.clientTaskId, 'nutrition clientTaskId')
-      reserveCost(owner, config.stylizationCostCny + config.nutritionCostCny)
+      const totalCost = config.stylizationCostCny + config.nutritionCostCny
+      reserveCost(owner, totalCost)
       const meal = {
         id: `meal_${crypto.randomUUID()}`,
         owner,
@@ -438,11 +478,24 @@ function createApplication(options = {}) {
         tasks: {},
         usedTaskClientIds: { stylization: new Set(), nutrition: new Set() }
       }
-      state.meals.set(meal.id, meal)
-      state.mealsByClientId.set(key, meal.id)
-      asset.boundMealId = meal.id
-      scheduleTask(meal, 'stylization', stylizationId)
-      scheduleTask(meal, 'nutrition', nutritionId)
+      const stylizationTask = buildTask(meal, 'stylization', stylizationId)
+      const nutritionTask = buildTask(meal, 'nutrition', nutritionId)
+      try {
+        if (databasePool) {
+          await persistentState.createMeal(databasePool, meal, asset, {
+            stylization: config.stylizationCostCny,
+            nutrition: config.nutritionCostCny
+          })
+        }
+        state.meals.set(meal.id, meal)
+        state.mealsByClientId.set(key, meal.id)
+        asset.boundMealId = meal.id
+        activateTask(meal, stylizationTask)
+        activateTask(meal, nutritionTask)
+      } catch (error) {
+        releaseCost(owner, totalCost)
+        throw error
+      }
       return sendJson(response, 201, await mealSnapshot(request, meal))
     }
 
@@ -453,6 +506,7 @@ function createApplication(options = {}) {
         const meal = state.meals.get(mealId)
         if (!meal || meal.deleted || meal.owner !== owner) return sendEmpty(response)
         meal.deleting = true
+        if (databasePool) await persistentState.persistMeal(databasePool, meal)
         try {
           const assets = [...state.assets.values()].filter((asset) => (
             !asset.deleted && asset.owner === owner && (asset.id === meal.originalAssetId || asset.boundMealId === meal.id)
@@ -462,8 +516,11 @@ function createApplication(options = {}) {
             asset.deleted = true
           }))
           meal.deleted = true
+          meal.deleting = false
+          if (databasePool) await persistentState.finishMealDeletion(databasePool, meal, assets)
         } finally {
           meal.deleting = false
+          if (databasePool && !meal.deleted) await persistentState.persistMeal(databasePool, meal).catch(() => {})
         }
         return sendEmpty(response)
       }
@@ -473,6 +530,7 @@ function createApplication(options = {}) {
         const body = await readJson(request)
         if (typeof body.note !== 'string' || body.note.length > 1000) throw appError(400, 'INVALID_NOTE', '备注长度不能超过 1000 个字符。')
         meal.note = body.note
+        if (databasePool) await persistentState.persistMeal(databasePool, meal)
         return sendJson(response, 200, await mealSnapshot(request, meal))
       }
     }
@@ -485,15 +543,29 @@ function createApplication(options = {}) {
       const body = await readJson(request)
       const clientTaskId = requiredString(body.clientTaskId, 'clientTaskId')
       if (meal.usedTaskClientIds[type].has(clientTaskId)) return sendJson(response, 200, await mealSnapshot(request, meal))
+      const oldTask = meal.tasks[type]
+      const previousStyle = meal.style
+      let taskCost
       if (type === 'stylization') {
         const style = requiredString(body.style, 'style', 20)
         if (!STYLES.has(style)) throw appError(400, 'INVALID_STYLE', '风格选项无效。')
         meal.style = style
-        reserveCost(owner, config.stylizationCostCny)
+        taskCost = config.stylizationCostCny
       } else {
-        reserveCost(owner, config.nutritionCostCny)
+        taskCost = config.nutritionCostCny
       }
-      scheduleTask(meal, type, clientTaskId)
+      reserveCost(owner, taskCost)
+      const newTask = buildTask(meal, type, clientTaskId)
+      try {
+        if (databasePool) await persistentState.retryTask(databasePool, meal, oldTask, newTask, taskCost)
+        activateTask(meal, newTask)
+      } catch (error) {
+        meal.style = previousStyle
+        meal.tasks[type] = oldTask
+        meal.usedTaskClientIds[type].delete(clientTaskId)
+        releaseCost(owner, taskCost)
+        throw error
+      }
       return sendJson(response, 200, await mealSnapshot(request, meal))
     }
 
@@ -504,6 +576,7 @@ function createApplication(options = {}) {
       if (body.manuallyConfirmed !== true) throw appError(400, 'CONFIRMATION_REQUIRED', '必须明确标记为人工确认。')
       meal.nutrition = validateNutrition(body.nutrition)
       meal.manuallyConfirmed = true
+      if (databasePool) await persistentState.persistMeal(databasePool, meal)
       return sendJson(response, 200, await mealSnapshot(request, meal))
     }
 
@@ -513,6 +586,7 @@ function createApplication(options = {}) {
       if (asset && !asset.deleted && asset.owner === owner && !asset.boundMealId) {
         await assetStore.delete(asset.objectKey)
         asset.deleted = true
+        if (databasePool) await persistentState.markAssetDeleted(databasePool, asset)
       }
       return sendEmpty(response)
     }
@@ -532,7 +606,7 @@ function createApplication(options = {}) {
     })
   }
 
-  return { assetStore, config, handler, state }
+  return { assetStore, config, databasePool, handler, initialize, state }
 }
 
 function createServer(options) {
