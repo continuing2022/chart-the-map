@@ -16,6 +16,8 @@ npm start
 { "ok": true, "provider": "local-poc" }
 ```
 
+配置 `DATABASE_URL` 后，服务启动时会自动执行 `server/db/migrations` 中尚未应用的 PostgreSQL 迁移；健康检查会增加 `"database":"postgres"`。Render Web Service 应使用同区域 PostgreSQL 的 Internal Database URL，并保持 `DATABASE_SSL=false`。也可以单独运行 `npm run db:migrate`。
+
 开发环境默认使用 `AUTH_MODE=dev`，把 `wx.login` code 的哈希当作隔离用户标识，只适合自动化和本地联调。服务不会自动读取 `.env` 文件；`.env.example` 只是部署平台环境变量的字段清单。
 
 ## 已实现的契约

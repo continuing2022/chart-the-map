@@ -111,6 +111,7 @@ function createApplication(options = {}) {
   }
   const provider = options.provider || createLocalProvider()
   const assetStore = options.assetStore || createAssetStore(config)
+  const databasePool = options.databasePool || null
   const state = {
     assets: new Map(),
     uploadsByClientId: new Map(),
@@ -350,7 +351,12 @@ function createApplication(options = {}) {
     const method = request.method || 'GET'
 
     if (method === 'GET' && url.pathname === '/health') {
-      return sendJson(response, 200, { ok: true, provider: provider.name || 'custom', storage: assetStore.name || 'custom' })
+      return sendJson(response, 200, {
+        ok: true,
+        provider: provider.name || 'custom',
+        storage: assetStore.name || 'custom',
+        ...(databasePool ? { database: 'postgres' } : {})
+      })
     }
 
     if (method === 'POST' && url.pathname === '/v1/auth/wechat') {
@@ -532,7 +538,7 @@ function createApplication(options = {}) {
     })
   }
 
-  return { assetStore, config, handler, state }
+  return { assetStore, config, databasePool, handler, state }
 }
 
 function createServer(options) {
