@@ -2,9 +2,36 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const vm = require('node:vm')
 
 const root = path.join(__dirname, '..')
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
+
+test('default entry opens the today page and every registered route has page files', () => {
+  const appConfig = JSON.parse(read('app.json'))
+  assert.equal(appConfig.entryPagePath, 'pages/home/index')
+  assert.equal(appConfig.pages[0], appConfig.entryPagePath)
+  assert.ok(appConfig.tabBar.list.some((item) => item.pagePath === appConfig.entryPagePath))
+  for (const route of appConfig.pages) {
+    for (const extension of ['js', 'json', 'wxml', 'wxss']) {
+      assert.ok(fs.existsSync(path.join(root, `${route}.${extension}`)), `${route}.${extension} must exist`)
+    }
+  }
+})
+
+test('missing launch routes recover to today without redirecting valid launches', () => {
+  let app
+  const launches = []
+  vm.runInNewContext(read('app.js'), {
+    App: (config) => { app = config },
+    wx: { reLaunch: (options) => launches.push(options.url) }
+  })
+  assert.deepEqual(launches, [])
+  app.onPageNotFound({ path: 'pages/index/index', isEntryPage: true })
+  assert.deepEqual(launches, ['/pages/home/index'])
+  app.onPageNotFound({ path: 'pages/removed/index', isEntryPage: false })
+  assert.deepEqual(launches, ['/pages/home/index', '/pages/home/index'])
+})
 
 test('today and calendar are configured as real tab pages', () => {
   const appConfig = JSON.parse(read('app.json'))
