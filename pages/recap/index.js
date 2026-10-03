@@ -20,15 +20,23 @@ function datePresentation(dateKey) {
 function navigationMetrics() {
   try {
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
-    return { statusBarHeight: windowInfo.statusBarHeight || 20 }
+    const menuButton = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuSafeWidth = menuButton && menuButton.left
+      ? Math.max(52, windowInfo.windowWidth - menuButton.left + 8)
+      : 52
+    return {
+      statusBarHeight: windowInfo.statusBarHeight || 20,
+      navSideWidth: menuSafeWidth
+    }
   } catch (error) {
-    return { statusBarHeight: 20 }
+    return { statusBarHeight: 20, navSideWidth: 52 }
   }
 }
 
 Page({
   data: {
     statusBarHeight: 20,
+    navSideWidth: 52,
     dateKey: '',
     dateLabel: '',
     weekdayLabel: '',
