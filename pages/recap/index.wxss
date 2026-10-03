@@ -1,9 +1,11 @@
 .page {
+  position: relative;
   box-sizing: border-box;
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 88% 9%, rgba(255, 192, 129, .10), transparent 27%),
+    radial-gradient(circle at 88% 10%, rgba(255, 196, 137, .14), transparent 24%),
+    radial-gradient(circle at 5% 68%, rgba(246, 190, 165, .10), transparent 23%),
     linear-gradient(180deg, #fffdf9 0%, #fff9f2 100%);
   color: #17191d;
 }
@@ -29,14 +31,18 @@
   justify-content: space-between;
 }
 
-.nav-action,
+.nav-side,
 .nav-spacer {
-  width: 80rpx;
   height: 80rpx;
   flex: none;
 }
 
-.nav-action { justify-content: center; border-radius: 40rpx; }
+.nav-action {
+  justify-content: center;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+}
 
 .close-icon { position: relative; width: 40rpx; height: 40rpx; }
 
@@ -57,11 +63,53 @@
 
 .nav-copy { min-width: 0; flex: 1; text-align: center; }
 
+.nav-title-wrap {
+  position: relative;
+  display: inline-block;
+}
+
 .nav-title {
-  font-size: 39rpx;
-  font-weight: 750;
+  position: relative;
+  z-index: 2;
+  font-family: "STKaiti", "KaiTi", "PingFang SC", serif;
+  font-size: 41rpx;
+  font-weight: 700;
   line-height: 1.25;
   letter-spacing: 2rpx;
+}
+
+.title-swash {
+  position: absolute;
+  right: 4rpx;
+  bottom: 0;
+  left: -3rpx;
+  height: 13rpx;
+  border-radius: 50%;
+  background: rgba(242, 140, 136, .3);
+  transform: rotate(-2deg);
+}
+
+.title-rays {
+  position: absolute;
+  top: 12rpx;
+  left: -34rpx;
+  width: 25rpx;
+  height: 35rpx;
+}
+
+.title-rays text {
+  position: absolute;
+  width: 18rpx;
+  height: 4rpx;
+  border-radius: 4rpx;
+  background: #f5b455;
+  transform: rotate(25deg);
+}
+
+.title-rays text:last-child {
+  top: 18rpx;
+  left: -4rpx;
+  transform: rotate(5deg);
 }
 
 .nav-date {
@@ -75,17 +123,43 @@
 .nav-date text + text { margin-left: 23rpx; }
 
 .content {
+  position: relative;
   box-sizing: border-box;
-  padding: 21rpx 34rpx 54rpx;
-  padding-bottom: calc(54rpx + env(safe-area-inset-bottom));
+  padding: 17rpx 34rpx 78rpx;
+  padding-bottom: calc(78rpx + env(safe-area-inset-bottom));
+}
+
+.paper-glow {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(18rpx);
+  pointer-events: none;
+}
+
+.paper-glow-one {
+  top: 120rpx;
+  right: -90rpx;
+  width: 210rpx;
+  height: 210rpx;
+  background: rgba(243, 217, 185, .26);
+}
+
+.paper-glow-two {
+  right: -48rpx;
+  bottom: 8rpx;
+  width: 160rpx;
+  height: 160rpx;
+  background: rgba(149, 186, 112, .15);
 }
 
 .memory-heading {
   position: relative;
+  z-index: 1;
   box-sizing: border-box;
-  min-height: 151rpx;
-  padding: 15rpx 29rpx 4rpx;
-  color: #9d473a;
+  min-height: 159rpx;
+  padding: 17rpx 28rpx 5rpx;
+  color: #a8473f;
   font-family: "STKaiti", "KaiTi", "PingFang SC", serif;
   font-size: 39rpx;
   line-height: 1.6;
@@ -124,19 +198,59 @@
   transform: rotate(-23deg);
 }
 
+.heading-aside {
+  position: absolute;
+  top: 25rpx;
+  right: 4rpx;
+  color: #a47b68;
+  font-size: 18rpx;
+  line-height: 1.65;
+  letter-spacing: 2rpx;
+  opacity: .82;
+  pointer-events: none;
+  transform: rotate(-9deg);
+}
+
+.collage-shell {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  padding: 14rpx;
+  border-radius: 38rpx;
+  background: rgba(255, 255, 255, .87);
+  box-shadow: 0 18rpx 45rpx rgba(108, 75, 51, .11);
+  transform: rotate(-.8deg);
+}
+
+.shell-tape {
+  position: absolute;
+  z-index: 5;
+  top: -11rpx;
+  left: 28rpx;
+  width: 92rpx;
+  height: 30rpx;
+  border-radius: 4rpx;
+  background: rgba(246, 193, 194, .58);
+  pointer-events: none;
+  transform: rotate(-10deg);
+}
+
 .photo-collage {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 222rpx);
-  gap: 10rpx;
-  min-height: 454rpx;
-  margin-top: 7rpx;
+  grid-template-rows: repeat(2, 211rpx);
+  gap: 5rpx;
+  min-height: 427rpx;
+  border-radius: 29rpx;
+  background: #eee7dd;
 }
 
 .recap-photo {
   width: 100%;
   height: 100%;
-  border-radius: 27rpx;
+  border-radius: 7rpx;
   background: #f1e9e0;
   transition: opacity .15s ease, transform .15s ease;
 }
@@ -144,23 +258,29 @@
 .photo-pressed { opacity: .78; transform: scale(.985); }
 
 .memory-note {
-  position: relative;
+  position: absolute;
+  z-index: 4;
+  right: -4rpx;
+  bottom: 14rpx;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
-  padding: 29rpx 24rpx 19rpx;
+  flex-direction: column;
+  width: 275rpx;
+  min-height: 142rpx;
+  padding: 29rpx 22rpx 20rpx;
   border-radius: 9rpx 18rpx 13rpx 11rpx;
   background: linear-gradient(145deg, #fffdf5, #fff7e7);
   box-shadow: 0 10rpx 27rpx rgba(113, 83, 57, .10);
   color: #684235;
   font-family: "STKaiti", "KaiTi", "PingFang SC", serif;
-  font-size: 32rpx;
+  font-size: 28rpx;
   line-height: 1.55;
   letter-spacing: 4rpx;
+  pointer-events: none;
   text-align: center;
-  transform: rotate(-4deg) scale(.91);
+  transform: rotate(-4deg);
 }
 
 .note-tape {
@@ -173,22 +293,33 @@
   transform: translateX(-50%) rotate(2deg);
 }
 
-.collage-1 .recap-photo { grid-column: 1 / -1; grid-row: 1 / -1; }
-
-.collage-1 .memory-note {
-  z-index: 2;
-  grid-column: 2;
-  grid-row: 2;
-  align-self: end;
-  min-height: 170rpx;
-  margin: 12rpx;
-  background: rgba(255, 250, 237, .94);
+.note-underline {
+  width: 82rpx;
+  height: 5rpx;
+  margin: 6rpx 0 0 auto;
+  border-radius: 50%;
+  background: rgba(239, 139, 132, .42);
+  transform: rotate(-7deg);
 }
 
+.collage-signature {
+  position: absolute;
+  z-index: 3;
+  bottom: 20rpx;
+  left: 18rpx;
+  color: rgba(91, 61, 48, .88);
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 19rpx;
+  line-height: 1.35;
+  pointer-events: none;
+  transform: rotate(-7deg);
+}
+
+.collage-1 .recap-photo { grid-column: 1 / -1; grid-row: 1 / -1; }
 .collage-2 .recap-photo { grid-row: 1 / -1; }
-.collage-2 .memory-note { display: none; }
-.collage-3 .photo-3 { grid-column: 1; grid-row: 2; }
-.collage-3 .memory-note { grid-column: 2; grid-row: 2; }
+.collage-3 .photo-1 { grid-column: 1; grid-row: 1 / -1; }
+.collage-3 .photo-2 { grid-column: 2; grid-row: 1; }
+.collage-3 .photo-3 { grid-column: 2; grid-row: 2; }
 .collage-4 .photo-1 { grid-column: 1; grid-row: 1; }
 .collage-4 .photo-2 { grid-column: 2; grid-row: 1; }
 .collage-4 .photo-3 { grid-column: 1; grid-row: 2; }
@@ -196,6 +327,8 @@
 
 .summary-card,
 .guidance-card {
+  position: relative;
+  z-index: 1;
   box-sizing: border-box;
   margin-top: 26rpx;
   border: 1rpx solid rgba(80, 62, 48, .035);
@@ -339,7 +472,8 @@
 .plant-art .leaf-two { top: 42rpx; right: 0; transform: rotate(153deg); }
 .plant-art .leaf-three { top: 65rpx; left: 4rpx; transform: rotate(31deg); }
 .guidance-copy { min-width: 0; flex: 1; }
-.guidance-title { color: #252b34; font-size: 28rpx; font-weight: 700; line-height: 1.4; }
+.guidance-title { padding-right: 145rpx; color: #252b34; font-size: 28rpx; font-weight: 700; line-height: 1.4; }
+.guidance-spark { margin-left: 8rpx; color: #f3ae50; font-size: 22rpx; }
 .guidance-text { margin-top: 10rpx; color: #7c838f; font-size: 24rpx; line-height: 1.55; }
 .guidance-text + .guidance-text { margin-top: 7rpx; }
 
@@ -350,16 +484,40 @@
   line-height: 1.45;
 }
 
+.guidance-aside {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  color: #a57869;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 16rpx;
+  line-height: 1.55;
+  letter-spacing: 2rpx;
+  text-align: right;
+  opacity: .75;
+  pointer-events: none;
+  transform: rotate(-7deg);
+}
+
+.action-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 20rpx;
+  margin-top: 31rpx;
+}
+
 .primary-button,
 .secondary-button {
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
   min-height: 94rpx;
-  margin-top: 27rpx;
+  margin: 0;
   padding: 18rpx 24rpx;
+  flex: 1;
   border-radius: 47rpx;
   font-size: 29rpx;
   font-weight: 650;
@@ -373,18 +531,36 @@
   color: #fff;
 }
 
-.secondary-button { margin-top: 16rpx; background: #fcedea; color: #7d4840; }
+.secondary-button { background: rgba(252, 237, 234, .86); color: #7d4840; }
+.button-arrow { margin-left: 17rpx; font-size: 47rpx; font-weight: 300; line-height: .7; }
 .primary-button-pressed, .secondary-button-pressed { opacity: .78; transform: scale(.988); }
 .tap-target { transition: opacity .15s ease, background-color .15s ease; }
 .tap-soft { opacity: .62; background: rgba(90, 78, 70, .07); }
+
+.footer-note {
+  position: relative;
+  z-index: 1;
+  width: 180rpx;
+  margin: 22rpx 0 -24rpx 9rpx;
+  padding: 12rpx 19rpx;
+  color: #9b7569;
+  font-family: "STKaiti", "KaiTi", serif;
+  font-size: 18rpx;
+  line-height: 1.7;
+  letter-spacing: 3rpx;
+  background: linear-gradient(165deg, rgba(249, 212, 204, .18), rgba(249, 212, 204, .38), transparent);
+  pointer-events: none;
+  transform: rotate(-7deg);
+}
 
 @media (max-width: 340px) {
   .content { padding-right: 24rpx; padding-left: 24rpx; }
   .memory-heading { padding-right: 9rpx; padding-left: 16rpx; font-size: 35rpx; letter-spacing: 3rpx; }
   .heading-line-two { padding-left: 69rpx; }
   .heading-stroke { left: 20rpx; }
-  .photo-collage { grid-template-rows: repeat(2, 202rpx); min-height: 414rpx; }
-  .memory-note { padding-right: 14rpx; padding-left: 14rpx; font-size: 28rpx; }
+  .heading-aside { display: none; }
+  .photo-collage { grid-template-rows: repeat(2, 190rpx); min-height: 385rpx; }
+  .memory-note { width: 235rpx; min-height: 126rpx; padding: 24rpx 13rpx 15rpx; font-size: 24rpx; }
   .summary-card { padding-right: 20rpx; padding-left: 20rpx; }
   .metric-icon { margin-right: 10rpx; transform: scale(.9); }
   .metric-value { font-size: 37rpx; }
@@ -392,4 +568,9 @@
   .macro-dot { margin-right: 7rpx; }
   .macro-item { font-size: 27rpx; }
   .plant-art { margin-right: 18rpx; transform: scale(.9); transform-origin: left top; }
+  .guidance-aside { display: none; }
+  .guidance-title { padding-right: 0; }
+  .action-row { gap: 13rpx; }
+  .primary-button, .secondary-button { padding-right: 14rpx; padding-left: 14rpx; font-size: 26rpx; }
+  .button-arrow { margin-left: 9rpx; }
 }
