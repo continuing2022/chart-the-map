@@ -8,6 +8,7 @@ async function start() {
   if (databasePool) await runMigrations(databasePool)
 
   const server = createServer({ config, databasePool })
+  await server.application.initialize()
   const port = server.application.config.port
   server.listen(port, '0.0.0.0', () => {
     console.log(`meal-diary-api listening on ${port}`)
