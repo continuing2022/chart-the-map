@@ -13,25 +13,26 @@
 2. 保持 `project.config.json` 的 `touristappid` 用于本地演示；正式调试时替换为自己的小程序 AppID。
 3. 选择任一餐次卡位并拍照或从相册选择图片，即可体验本地模拟流程。
 
-小程序默认仍使用本地模拟，不会上传用户照片。仓库同时提供了一个可启动的远端 API POC，用于在接入腾讯云之前验证完整客户端契约。
+小程序当前使用 `config/runtime.js` 中配置的远端 API，会向自有后端上传照片。需要本地模拟时，将 `serviceMode` 改为 `local`。
 
 ## 远端服务适配
 
-客户端已经具备可切换的远端 API 边界，但默认仍为安全的本地模拟模式。公网后端准备好后，在 `config/runtime.js` 中把 `serviceMode` 改为 `remote` 并填写公开的 HTTPS `apiBaseUrl`；不要在该文件或任何小程序源码中填写微信 AppSecret、腾讯云 `SecretId`、`SecretKey` 或混元密钥。
+客户端通过 `serviceMode: 'remote'` 和公开的 HTTPS `apiBaseUrl` 连接后端；不要在该文件或任何小程序源码中填写微信 AppSecret、腾讯云 `SecretId`、`SecretKey` 或混元密钥。
 
 远端模式使用 `wx.login` 换取短期会话，原图只上传到项目自有 API，风格化与营养任务分别轮询并继续受本地任务 ID 防陈旧回写保护。完整接口、私有 COS、删除队列和上线验收要求见 [`spec/cloud-api-contract.md`](./spec/cloud-api-contract.md)。正式联调前还需要把 API 域名加入微信公众平台的 request/uploadFile 合法域名，并把风格图签名地址所用域名加入 downloadFile 合法域名。
 
 ## 远端 API POC
 
-Node.js 20 以上可直接运行，不需要安装第三方依赖：
+Node.js 20 以上，安装依赖后运行：
 
 ```powershell
+npm ci
 npm start
 ```
 
 默认开发模式监听 `http://localhost:3000`，使用本地内存 Provider 验证短期会话、JPEG/PNG 受限上传、EXIF/文本元数据移除、用户隔离、幂等餐食与任务、人工确认保护、短时签名图片、限流、100 元预算闸门和幂等删除。配置完整 COS 环境变量后，原图和生成图会写入私有腾讯云 COS；`GET /health` 的 `storage` 字段可确认当前使用 `memory` 还是 `cos`。`npm test` 会通过真实 HTTP 与 multipart 请求执行契约集成测试。
 
-生产环境变量示例见 [`.env.example`](./.env.example)，容器入口见 [`Dockerfile`](./Dockerfile)，部署边界和限制见 [`server/README.md`](./server/README.md)。当前本地 Provider 仍用原始照片模拟风格化输出，并将业务状态保存在进程内；COS 只解决图片二进制持久化，不能替代混元、内容安全和共享数据库。完成这些替换并获得公网 HTTPS 域名之前，不要向真实用户开放。
+生产环境默认使用腾讯云混元进行真实风格化，复用服务端 COS 密钥，也可独立配置混元密钥。生成结果及时下载并保存回图片存储，保留 AI 水印；`GET /health` 的 `provider: "hunyuan"` 可确认已启用。开发环境默认仍使用本地模拟，设置 `AI_PROVIDER=hunyuan` 后可调用真实生图。营养分析和上传内容安全钩子仍为 POC 实现，健康接口的 `capabilities` 会明确标示。配置 `DATABASE_URL` 后业务数据和混元任务 ID 会持久化。部署步骤、权限和限制见 [`server/README.md`](./server/README.md)，环境变量见 [`.env.example`](./.env.example)。
 
 ## 第二阶段 · 第一批增量
 
@@ -40,7 +41,7 @@ npm start
 - 人工调整份量后会同步重算本地模拟营养值；重新分析只产生候选营养分析，必须由用户选择后才会替换人工确认结果。
 - `npm test` 可运行核心状态与一致性测试，`npm run check` 可执行 JavaScript 语法检查。
 
-本批次仍使用本地模拟服务。真实后端地址、腾讯云密钥和 COS 凭证都不应写入小程序代码；云端适配将在后续批次接入。
+本批次最初使用本地模拟服务；当前混元生图接入与部署状态以“远端服务适配”及后端说明为准。
 
 ## 第三阶段 · 历史补记与每日回顾
 

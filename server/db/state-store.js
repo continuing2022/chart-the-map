@@ -52,7 +52,9 @@ function taskFromRow(row) {
     createdAt: timestamp(row.created_at),
     completedAt: timestamp(row.completed_at),
     error: row.error,
-    result: row.result
+    result: row.result,
+    providerJobId: row.provider_job_id || null,
+    providerSubmittedAt: timestamp(row.provider_submitted_at)
   }
 }
 
@@ -174,6 +176,13 @@ async function persistMeal(pool, meal) {
   ])
 }
 
+async function persistProviderJob(pool, task) {
+  await pool.query(`
+    UPDATE processing_tasks SET provider_job_id = $2, provider_submitted_at = $3
+    WHERE id = $1
+  `, [task.id, task.providerJobId, new Date(task.providerSubmittedAt)])
+}
+
 async function persistTask(pool, meal, task) {
   const client = await pool.connect()
   try {
@@ -255,6 +264,7 @@ module.exports = {
   insertAsset,
   markAssetDeleted,
   persistMeal,
+  persistProviderJob,
   persistTask,
   retryTask
 }

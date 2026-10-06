@@ -38,6 +38,13 @@ function loadConfig(overrides = {}) {
     mutationLimitPerMinute: numberFromEnv('MUTATION_LIMIT_PER_MINUTE', 60),
     publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
     allowLocalPocProvider: booleanFromEnv('ALLOW_LOCAL_POC_PROVIDER'),
+    aiProvider: process.env.AI_PROVIDER || '',
+    hunyuanSecretId: process.env.HUNYUAN_SECRET_ID || '',
+    hunyuanSecretKey: process.env.HUNYUAN_SECRET_KEY || '',
+    hunyuanRegion: process.env.HUNYUAN_REGION || 'ap-guangzhou',
+    hunyuanRequestTimeoutMs: numberFromEnv('HUNYUAN_REQUEST_TIMEOUT_MS', 30000),
+    hunyuanPollIntervalMs: numberFromEnv('HUNYUAN_POLL_INTERVAL_MS', 3000),
+    hunyuanTaskTimeoutMs: numberFromEnv('HUNYUAN_TASK_TIMEOUT_MS', 600000),
     assetStorage: process.env.ASSET_STORAGE || '',
     cosBucket: process.env.COS_BUCKET || '',
     cosRegion: process.env.COS_REGION || '',
@@ -56,6 +63,21 @@ function loadConfig(overrides = {}) {
     throw new Error('COS 存储需要完整配置 COS_BUCKET、COS_REGION、COS_SECRET_ID 和 COS_SECRET_KEY。')
   }
   if (hasAnyCosValue && !hasAllCosValues) throw new Error('COS 环境变量配置不完整。')
+  if (!config.aiProvider) config.aiProvider = config.production ? 'hunyuan' : 'local'
+  if (!['local', 'hunyuan'].includes(config.aiProvider)) throw new Error('AI_PROVIDER 只允许 local 或 hunyuan。')
+  if (Boolean(config.hunyuanSecretId) !== Boolean(config.hunyuanSecretKey)) {
+    throw new Error('HUNYUAN_SECRET_ID 和 HUNYUAN_SECRET_KEY 必须成对配置。')
+  }
+  config.hunyuanSecretId = config.hunyuanSecretId || config.cosSecretId
+  config.hunyuanSecretKey = config.hunyuanSecretKey || config.cosSecretKey
+  if (config.aiProvider === 'hunyuan') {
+    if (!config.hunyuanSecretId || !config.hunyuanSecretKey) {
+      throw new Error('混元需要 HUNYUAN_SECRET_ID/HUNYUAN_SECRET_KEY 或现有 COS_SECRET_ID/COS_SECRET_KEY。')
+    }
+    for (const key of ['hunyuanRequestTimeoutMs', 'hunyuanPollIntervalMs', 'hunyuanTaskTimeoutMs']) {
+      if (!Number.isFinite(config[key]) || config[key] < 1) throw new Error(`${key} 必须大于 0。`)
+    }
+  }
   config.cosKeyPrefix = String(config.cosKeyPrefix || '').replace(/^\/+|\/+$/g, '')
   if (!config.cosKeyPrefix || config.cosKeyPrefix.includes('..')) throw new Error('COS_KEY_PREFIX 无效。')
   if (!['dev', 'wechat'].includes(config.authMode)) throw new Error('AUTH_MODE 只允许 dev 或 wechat。')

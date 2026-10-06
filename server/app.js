@@ -2,7 +2,7 @@ const crypto = require('node:crypto')
 const http = require('node:http')
 const { loadConfig } = require('./config')
 const { validateAndSanitizeImage } = require('./image-safety')
-const { createLocalProvider } = require('./providers/local-provider')
+const { createProvider } = require('./providers')
 const { createAssetStore } = require('./storage')
 const persistentState = require('./db/state-store')
 const {
@@ -107,10 +107,7 @@ function validateNutrition(value) {
 
 function createApplication(options = {}) {
   const config = loadConfig(options.config)
-  if (!options.provider && config.production && !config.allowLocalPocProvider) {
-    throw new Error('生产环境拒绝默认 local-poc Provider；仅隔离联调可显式设置 ALLOW_LOCAL_POC_PROVIDER=true。')
-  }
-  const provider = options.provider || createLocalProvider()
+  const provider = options.provider || createProvider(config)
   const assetStore = options.assetStore || createAssetStore(config)
   const databasePool = options.databasePool || null
   const state = {
@@ -270,12 +267,21 @@ function createApplication(options = {}) {
         buffer: await assetStore.get(originalAsset.objectKey)
       }
       if (type === 'stylization') {
-        const output = await provider.stylize({ meal, originalAsset: originalWithBuffer })
+        const output = await provider.stylize({
+          meal: { ...meal }, originalAsset: originalWithBuffer, task,
+          isCurrent: () => !meal.deleted && !meal.deleting && meal.tasks[type].id === taskId,
+          onSubmitted: async (jobId, submittedAt) => {
+            task.providerJobId = jobId
+            task.providerSubmittedAt = submittedAt
+            if (databasePool) await persistentState.persistProviderJob(databasePool, task)
+          }
+        })
+        if (meal.deleted || meal.deleting || meal.tasks[type].id !== taskId) return
         const asset = await addAsset(meal.owner, {
           buffer: output.buffer,
           mimeType: output.mimeType,
-          width: originalAsset.width,
-          height: originalAsset.height,
+          width: output.width || originalAsset.width,
+          height: output.height || originalAsset.height,
           boundMealId: meal.id,
           kind: 'stylized'
         })
@@ -299,7 +305,8 @@ function createApplication(options = {}) {
     } catch (error) {
       if (!meal.deleted && meal.tasks[type].id === taskId) {
         task.status = 'failed'
-        task.error = { message: '云端处理失败，请稍后重试。' }
+        task.error = { message: error.publicMessage || '云端处理失败，请稍后重试。' }
+        if (error.publicMessage) task.error.code = error.code
         task.completedAt = Date.now()
         if (databasePool) await persistentState.persistTask(databasePool, meal, task).catch(() => {})
       }
@@ -388,6 +395,7 @@ function createApplication(options = {}) {
         ok: true,
         provider: provider.name || 'custom',
         storage: assetStore.name || 'custom',
+        ...(provider.capabilities ? { capabilities: provider.capabilities } : {}),
         ...(databasePool ? { database: 'postgres', persistence: 'postgres' } : {})
       })
     }
