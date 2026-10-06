@@ -1,6 +1,21 @@
 # 远端 API POC
 
-这是 `spec/cloud-api-contract.md` 的可执行实现，已接入腾讯云 COS、混元生图和可选 PostgreSQL 持久化，支持直接运行或构建容器。
+这是 `spec/cloud-api-contract.md` 的可执行实现，已接入腾讯云 COS、TokenHub 混元生图和可选 PostgreSQL 持久化，支持直接运行或构建容器。
+
+## 当前生图接入：TokenHub
+
+旧混元平台已于 2026-09-30 停服。本项目生产默认使用 TokenHub 的 Hy-Image-3.5-preview；下文旧混元接入记录仅供历史排查，不能用于当前上线。
+
+1. 在 [TokenHub API Key 管理](https://console.cloud.tencent.com/tokenhub/apikey) 创建新平台 API Key。
+2. 在 [在线推理－视觉模型](https://console.cloud.tencent.com/tokenhub/inference?regionId=1&serviceType=VISION) 开启 Hy-Image-3.5-preview 的后付费。
+3. Render 设置 `AI_PROVIDER=tokenhub`、`TOKENHUB_API_KEY`，保存并部署。COS 密钥继续用于存储，不能代替新平台 API Key。
+4. `/health` 应返回 `provider: "tokenhub"`、`aiConfigured: true`；这代表配置就绪，真实模型调用还需通过测试照片确认。未填 Key 时 API 仍能启动，返回 `aiConfigured: false`，生图任务显示缺少配置。
+
+[官方 Hy 生图指南](https://cloud.tencent.com/document/product/1823/135745)规定新接口同步返回结果。后端使用现有后台任务等待请求，小程序继续轮询自有后端。参考照片以 Base64 发送，风格由提示词引导，生成面积为 1024×1024 档位、水印为“AI生成”，结果下载后保存回 COS。
+
+生成超时默认为 5 分钟，可用 `TOKENHUB_GENERATION_TIMEOUT_MS` 调整；图片下载超时沿用 `HUNYUAN_REQUEST_TIMEOUT_MS`。请求不会自动重试。配置 PostgreSQL 后先持久化调用标记；服务重启遇到未完成的同步生成任务会提示中断，由用户决定是否再次生成，避免自动重复计费。新接口不支持用旧任务 ID 恢复查询。
+
+诊断日志为 `tokenhub_failed`，仅记录失败阶段、状态码、错误码和请求 ID。预算台账仍使用估算成本，应按 TokenHub 实际价格配置 `STYLIZATION_COST_CNY` 并设置云端预算告警。营养分析和上传审核仍为 POC 实现。
 
 ## 本地运行
 
@@ -37,7 +52,7 @@ npm start
 - `NODE_ENV=production`
 - `AUTH_MODE=wechat`
 - `ALLOW_LOCAL_POC_PROVIDER=false`
-- `AI_PROVIDER=hunyuan`（生产默认值）
+- `AI_PROVIDER=tokenhub`（生产默认值）和 `TOKENHUB_API_KEY`
 - `PUBLIC_BASE_URL=https://你的已备案API域名`
 - `WECHAT_APP_ID` 和 `WECHAT_APP_SECRET`
 - 分别随机生成的 `TOKEN_SECRET` 与 `ASSET_SIGNING_SECRET`
@@ -46,9 +61,9 @@ npm start
 
 其余上传、时效、限流、成本和端口参数见根目录 `.env.example`。不要把任何真实值提交到仓库，也不要把微信 AppSecret、腾讯云 SecretId/SecretKey 或混元密钥放入 `config/runtime.js`。
 
-服务在生产模式下会校验 HTTPS 公网地址、微信配置、两个至少 32 字符的密钥和混元凭证。只有不包含真实用户数据的隔离契约联调环境，才可以临时同时设置 `AI_PROVIDER=local` 和 `ALLOW_LOCAL_POC_PROVIDER=true`。
+服务在生产模式下会校验 HTTPS 公网地址、微信配置和两个至少 32 字符的签名密钥。TokenHub 缺少 API Key 时不会拖垮登录、存储等接口，而是返回未配置的健康状态和明确生图错误。只有不包含真实用户数据的隔离契约联调环境，才可以临时同时设置 `AI_PROVIDER=local` 和 `ALLOW_LOCAL_POC_PROVIDER=true`。
 
-## Render 启用混元
+## 历史记录：旧混元接入（已停服）
 
 1. 后端设置 `NODE_ENV=production`、`AI_PROVIDER=hunyuan`。若已有完整的 `COS_SECRET_ID` / `COS_SECRET_KEY`，无需新增密钥；独立密钥可使用成对的 `HUNYUAN_SECRET_ID` / `HUNYUAN_SECRET_KEY`。
 2. 在腾讯云开通混元生图计费，并给对应子账号授予 `hunyuan:SubmitHunyuanImageJob` 和 `hunyuan:QueryHunyuanImageJob` 权限；COS 对象读写权限仍需保留。

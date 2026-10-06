@@ -32,7 +32,7 @@ npm start
 
 默认开发模式监听 `http://localhost:3000`，使用本地内存 Provider 验证短期会话、JPEG/PNG 受限上传、EXIF/文本元数据移除、用户隔离、幂等餐食与任务、人工确认保护、短时签名图片、限流、100 元预算闸门和幂等删除。配置完整 COS 环境变量后，原图和生成图会写入私有腾讯云 COS；`GET /health` 的 `storage` 字段可确认当前使用 `memory` 还是 `cos`。`npm test` 会通过真实 HTTP 与 multipart 请求执行契约集成测试。
 
-生产环境默认使用腾讯云混元进行真实风格化，复用服务端 COS 密钥，也可独立配置混元密钥。生成结果及时下载并保存回图片存储，保留 AI 水印；`GET /health` 的 `provider: "hunyuan"` 可确认已启用。开发环境默认仍使用本地模拟，设置 `AI_PROVIDER=hunyuan` 后可调用真实生图。营养分析和上传内容安全钩子仍为 POC 实现，健康接口的 `capabilities` 会明确标示。配置 `DATABASE_URL` 后业务数据和混元任务 ID 会持久化。部署步骤、权限和限制见 [`server/README.md`](./server/README.md)，环境变量见 [`.env.example`](./.env.example)。
+生产环境默认使用 TokenHub 的 Hy-Image-3.5-preview 进行风格化，需要在服务端配置 `TOKENHUB_API_KEY` 并在 TokenHub 开启该模型后付费。COS 密钥仅用于图片存储。生成结果保存回 COS 并保留 AI 水印。`GET /health` 返回 `provider: "tokenhub"`、`aiConfigured: true` 时表示配置就绪，真实调用还需通过测试照片验证。开发环境默认本地模拟，设置 `AI_PROVIDER=tokenhub` 切换。营养分析和上传审核仍为 POC 实现。部署步骤见 [`server/README.md`](./server/README.md)，环境变量见 [`.env.example`](./.env.example)。
 
 ## 第二阶段 · 第一批增量
 

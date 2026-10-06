@@ -137,8 +137,8 @@ test('classifies SDK and network failures while logging only safe diagnostic fie
   }
 })
 
-test('production selects Hunyuan with COS credentials and rejects incomplete dedicated credentials', () => {
-  const base = { production: true, aiProvider: '', cosBucket: 'bucket', cosRegion: 'ap-guangzhou', cosSecretId: 'test-id', cosSecretKey: 'test-key', hunyuanSecretId: '', hunyuanSecretKey: '' }
+test('explicit legacy Hunyuan uses COS credentials and rejects incomplete dedicated credentials', () => {
+  const base = { production: true, aiProvider: 'hunyuan', cosBucket: 'bucket', cosRegion: 'ap-guangzhou', cosSecretId: 'test-id', cosSecretKey: 'test-key', hunyuanSecretId: '', hunyuanSecretKey: '' }
   const loaded = loadConfig(base)
   assert.equal(loaded.aiProvider, 'hunyuan')
   assert.equal(loaded.hunyuanSecretId, 'test-id')

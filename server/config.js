@@ -39,6 +39,8 @@ function loadConfig(overrides = {}) {
     publicBaseUrl: process.env.PUBLIC_BASE_URL || '',
     allowLocalPocProvider: booleanFromEnv('ALLOW_LOCAL_POC_PROVIDER'),
     aiProvider: process.env.AI_PROVIDER || '',
+    tokenhubApiKey: process.env.TOKENHUB_API_KEY || '',
+    tokenhubGenerationTimeoutMs: numberFromEnv('TOKENHUB_GENERATION_TIMEOUT_MS', 300000),
     hunyuanSecretId: process.env.HUNYUAN_SECRET_ID || '',
     hunyuanSecretKey: process.env.HUNYUAN_SECRET_KEY || '',
     hunyuanRegion: process.env.HUNYUAN_REGION || 'ap-guangzhou',
@@ -63,8 +65,11 @@ function loadConfig(overrides = {}) {
     throw new Error('COS 存储需要完整配置 COS_BUCKET、COS_REGION、COS_SECRET_ID 和 COS_SECRET_KEY。')
   }
   if (hasAnyCosValue && !hasAllCosValues) throw new Error('COS 环境变量配置不完整。')
-  if (!config.aiProvider) config.aiProvider = config.production ? 'hunyuan' : 'local'
-  if (!['local', 'hunyuan'].includes(config.aiProvider)) throw new Error('AI_PROVIDER 只允许 local 或 hunyuan。')
+  if (!config.aiProvider) config.aiProvider = config.production ? 'tokenhub' : 'local'
+  if (!['local', 'hunyuan', 'tokenhub'].includes(config.aiProvider)) throw new Error('AI_PROVIDER 只允许 local、tokenhub 或 legacy hunyuan。')
+  if (config.aiProvider === 'tokenhub' && (!Number.isFinite(config.tokenhubGenerationTimeoutMs) || config.tokenhubGenerationTimeoutMs < 1)) {
+    throw new Error('TOKENHUB_GENERATION_TIMEOUT_MS 必须大于 0。')
+  }
   if (Boolean(config.hunyuanSecretId) !== Boolean(config.hunyuanSecretKey)) {
     throw new Error('HUNYUAN_SECRET_ID 和 HUNYUAN_SECRET_KEY 必须成对配置。')
   }

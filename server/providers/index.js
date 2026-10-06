@@ -1,6 +1,10 @@
 const { createLocalProvider } = require('./local-provider')
 
 function createProvider(config) {
+  if (config.aiProvider === 'tokenhub') {
+    const { createTokenHubProvider } = require('./tokenhub-provider')
+    return createTokenHubProvider(config)
+  }
   if (config.aiProvider === 'hunyuan') {
     const { createHunyuanProvider } = require('./hunyuan-provider')
     return createHunyuanProvider(config)

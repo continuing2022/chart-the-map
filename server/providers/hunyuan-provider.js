@@ -170,4 +170,4 @@ function createHunyuanProvider(config, dependencies = {}) {
   }
 }
 
-module.exports = { createHunyuanProvider }
+module.exports = { createHunyuanProvider, downloadImage, STYLE_PROMPTS }

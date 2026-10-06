@@ -397,6 +397,7 @@ function createApplication(options = {}) {
         storage: assetStore.name || 'custom',
         ...(process.env.RENDER_GIT_COMMIT ? { revision: process.env.RENDER_GIT_COMMIT } : {}),
         ...(provider.capabilities ? { capabilities: provider.capabilities } : {}),
+        ...(typeof provider.configured === 'boolean' ? { aiConfigured: provider.configured } : {}),
         ...(databasePool ? { database: 'postgres', persistence: 'postgres' } : {})
       })
     }

@@ -2,13 +2,28 @@ const assert = require('node:assert/strict')
 const { test } = require('node:test')
 const { createServer } = require('../server/app')
 const { createHunyuanProvider } = require('../server/providers/hunyuan-provider')
+const { createTokenHubProvider } = require('../server/providers/tokenhub-provider')
 
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64')
 
-test('HTTP upload generates through Hunyuan, stores its output, reports capabilities and deletes original/output', async () => {
+for (const mode of ['hunyuan', 'tokenhub']) {
+test(`HTTP upload generates through ${mode}, stores its output, reports capabilities and deletes original/output`, async () => {
   let submitted = 0
   let failNext = false
-  const provider = createHunyuanProvider({
+  const provider = mode === 'tokenhub' ? createTokenHubProvider({
+    tokenhubApiKey: 'test-only-key', tokenhubGenerationTimeoutMs: 1000,
+    maxUploadBytes: 1024, maxImageDimension: 6000, hunyuanRequestTimeoutMs: 1000
+  }, { fetch: async (url, options) => {
+    if (options.method === 'POST') {
+      submitted += 1
+      const body = JSON.parse(options.body)
+      assert.equal(body.messages[0].content[1].image_url.url, `data:image/png;base64,${PNG.toString('base64')}`)
+      return new Response(JSON.stringify(failNext
+        ? { error: { code: 'invalid_api_key', message: 'private SDK message' } }
+        : { choices: [{ delta: { image: { url: 'https://image.myqcloud.com/result.png' } } }] }), { status: failNext ? 401 : 200 })
+    }
+    return new Response(PNG)
+  } }) : createHunyuanProvider({
     maxUploadBytes: 1024, maxImageDimension: 6000,
     hunyuanRequestTimeoutMs: 1000, hunyuanPollIntervalMs: 10, hunyuanTaskTimeoutMs: 1000
   }, {
@@ -51,8 +66,9 @@ test('HTTP upload generates through Hunyuan, stores its output, reports capabili
   }
   try {
     const health = await api('/health')
-    assert.equal(health.provider, 'hunyuan')
-    assert.equal(health.capabilities.stylization, 'hunyuan')
+    assert.equal(health.provider, mode)
+    assert.equal(health.capabilities.stylization, mode)
+    if (mode === 'tokenhub') assert.equal(health.aiConfigured, true)
     assert.equal(health.capabilities.nutrition, 'local-poc')
     const login = await api('/v1/auth/wechat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: 'hunyuan-user' }) })
     headers = { Authorization: `Bearer ${login.session.accessToken}` }
@@ -73,7 +89,7 @@ test('HTTP upload generates through Hunyuan, stores its output, reports capabili
     await api('/v1/meals', options)
     const meal = await waitFor(path, (item) => item.status === 'completed')
     assert.equal(submitted, 1)
-    assert.equal(server.application.state.meals.get(meal.id).tasks.stylization.providerJobId, 'remote-job')
+    assert.equal(server.application.state.meals.get(meal.id).tasks.stylization.providerJobId, mode === 'tokenhub' ? 'tokenhub:in-flight' : 'remote-job')
     assert.equal(meal.tasks.stylization.providerJobId, undefined)
     assert.equal(server.application.state.assets.get(meal.tasks.stylization.result.assetId).kind, 'stylized')
     const image = await fetch(meal.tasks.stylization.result.imageUrl)
@@ -84,7 +100,7 @@ test('HTTP upload generates through Hunyuan, stores its output, reports capabili
       body: JSON.stringify({ clientTaskId: 'style-2', style: '插画' })
     })
     const failed = await waitFor(path, (item) => item.tasks.stylization.status === 'failed')
-    assert.equal(failed.tasks.stylization.error.code, 'HUNYUAN_ACCESS_DENIED')
+    assert.equal(failed.tasks.stylization.error.code, mode === 'tokenhub' ? 'TOKENHUB_ACCESS_DENIED' : 'HUNYUAN_ACCESS_DENIED')
     assert.doesNotMatch(JSON.stringify(failed), /private SDK/)
     await api(path, { method: 'DELETE' })
     assert.equal((await fetch(meal.tasks.stylization.result.imageUrl)).status, 404)
@@ -93,3 +109,4 @@ test('HTTP upload generates through Hunyuan, stores its output, reports capabili
     await new Promise((resolve) => server.close(resolve))
   }
 })
+}
