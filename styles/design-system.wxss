@@ -1,0 +1,53 @@
+/* Shared warm iOS foundation; 2rpx = 1px on the 375px design canvas.
+   Isolated components import these tokens explicitly.
+   Visual balance: 70% warm surfaces, 20% text/photos, 10% brand/state accents. */
+page, .custom-nav, .tabbar-safe-area {
+  --bg: #faf8f4;
+  --surface: #fff9f3;
+  --ink: #1f1f1f;
+  --muted: #74716e;
+  --quiet: #aaa5a0;
+  --brand: #ef625e;
+  --brand-soft: #fce3e0;
+  --accent: #f4a340;
+  --success: #72b98b;
+  --danger: #e8645c;
+  --line: rgba(60, 45, 35, .08);
+  --glass: rgba(255, 255, 255, .72);
+  --glass-border: rgba(255, 255, 255, .72);
+  --float-shadow: 0 12rpx 40rpx rgba(75, 58, 43, .08);
+  --gutter: 44rpx;
+  --space-section: 48rpx;
+  --space-content: 24rpx;
+  --radius-card: 40rpx;
+  --radius-image: 32rpx;
+  --radius-control: 32rpx;
+  --text-page: 60rpx;
+  --text-section: 40rpx;
+  --text-card: 32rpx;
+  --text-body: 28rpx;
+  --text-caption: 24rpx;
+  --control-height: 88rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.ui-icon {
+  display: block;
+  width: 40rpx;
+  height: 40rpx;
+  flex: none;
+}
+
+.tap-target, .tap-card {
+  transition: opacity .15s ease, background-color .15s ease;
+}
+
+.tap-soft, .tap-card-active {
+  opacity: .65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-target, .tap-card {
+    transition: none;
+  }
+
+}

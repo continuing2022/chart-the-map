@@ -2,17 +2,15 @@
   <view class="navigation" style="padding-top: {{statusBarHeight}}px;">
     <view class="nav-bar">
       <view class="back-button tap-target" bindtap="navigateBack" hover-class="tap-soft" aria-role="button" aria-label="返回上一页">
-        <text class="back-chevron"></text>
+        <image class="ui-icon" src="/assets/icons/back.svg" mode="aspectFit" aria-hidden="true" />
       </view>
-      <view class="nav-copy">
-        <view class="slot-title">{{slotLabel}}</view>
-        <view class="date-label">{{dateLabel}}</view>
-      </view>
+      <view class="nav-caption">餐食详情</view>
       <view class="nav-balance" aria-hidden="true"></view>
     </view>
   </view>
 
   <view class="content">
+    <view class="meal-heading"><view class="slot-title">{{slotLabel}}</view><view class="date-label">{{dateLabel}}</view></view>
     <view class="hero-wrap">
       <image class="hero-image" src="{{showOriginal || record.stylizationTask.status !== 'completed' ? record.imagePath : record.stylizedImage}}" mode="aspectFill" />
       <view class="image-state state-{{record.stylizationTask.status}}">
@@ -63,103 +61,26 @@
       <view wx:if="{{!noteEditing}}" class="note-copy {{record.note ? '' : 'placeholder'}}" bindtap="startNoteEdit">
         {{record.note || '写下一句关于这餐的记忆…'}}
       </view>
-      <textarea wx:else class="note-editor" maxlength="50" placeholder="写下一句关于这餐的记忆…" value="{{record.note}}" focus="{{noteEditing}}" bindblur="saveNote" auto-height show-confirm-bar="false" aria-label="餐食小记，最多50字" />
-    </view>
-
-    <view class="card nutrition-card">
-      <view class="card-heading nutrition-heading">
-        <view class="nutrition-title-group">
-          <view class="card-title">营养估算</view>
-          <view wx:if="{{record.manuallyConfirmed}}" class="confirmed-badge"><text>✓</text> 已人工确认</view>
-        </view>
-        <view class="help-button tap-target" bindtap="showNutritionInfo" hover-class="tap-soft" aria-role="button" aria-label="查看营养估算说明">?</view>
-      </view>
-
-      <view wx:if="{{record.nutritionTask.status === 'processing' && !record.nutrition}}" class="nutrition-empty">
-        <view class="loading-orbit" aria-hidden="true"><text></text></view>
-        <view class="empty-title">正在分析菜品与份量</view>
-        <view class="empty-description">营养结果生成后会显示在这里。</view>
-      </view>
-
-      <view wx:if="{{record.nutritionTask.status === 'failed' && !record.nutrition}}" class="nutrition-empty failed-empty">
-        <view class="failed-mark" aria-hidden="true">!</view>
-        <view class="empty-title">营养分析暂时失败</view>
-        <view class="empty-description">{{record.nutritionTask.error || '请稍后重新分析。'}}</view>
-        <view class="inline-retry" bindtap="retryNutrition" hover-class="tap-soft" aria-role="button">重新分析</view>
-      </view>
-
-      <block wx:if="{{record.nutrition}}">
-        <view class="food-list">
-          <view wx:for="{{record.nutrition.items}}" wx:for-index="foodIndex" wx:key="name" class="food-row">
-            <view class="food-info">
-              <view class="food-icon food-icon-{{item.group}}" aria-hidden="true">{{item.icon}}</view>
-              <view class="food-name">{{item.name}}</view>
-            </view>
-            <view class="portion-group" aria-role="radiogroup" aria-label="调整{{item.name}}的份量">
-              <view wx:for="{{portions}}" wx:for-index="portionIndex" wx:key="*this" class="portion {{record.nutrition.items[foodIndex].portion === item ? 'selected' : ''}}" data-item-index="{{foodIndex}}" data-portion="{{item}}" bindtap="changePortion" hover-class="portion-pressed" aria-role="radio" aria-checked="{{record.nutrition.items[foodIndex].portion === item}}">{{item}}</view>
-            </view>
-          </view>
-        </view>
-
-        <view class="nutrition-summary">
-          <view class="calorie-line"><text class="approximately">约</text><text class="calorie-value">{{record.nutrition.calories}}</text><text class="calorie-unit">kcal</text></view>
-          <view class="macro-line">
-            <text>蛋白质 {{record.nutrition.protein}}g</text>
-            <text class="macro-dot">·</text>
-            <text>脂肪 {{record.nutrition.fat}}g</text>
-            <text class="macro-dot">·</text>
-            <text>碳水 {{record.nutrition.carbs}}g</text>
-          </view>
-        </view>
-      </block>
-
-      <view wx:if="{{record.nutritionTask.status === 'processing' && record.nutrition}}" class="analysis-notice">
-        <text class="notice-spinner" aria-hidden="true"></text>
-        正在重新分析；当前{{record.manuallyConfirmed ? '人工确认' : '已有'}}结果会保留。
-      </view>
-      <view wx:if="{{record.nutritionTask.status === 'failed' && record.nutrition}}" class="analysis-notice analysis-failed">
-        <text class="notice-symbol" aria-hidden="true">!</text>
-        本次分析失败，当前结果未受影响。
-        <text class="notice-link" bindtap="retryNutrition">重试</text>
-      </view>
-
-      <view wx:if="{{record.nutritionCandidate}}" class="candidate-card">
-        <view class="candidate-label">新分析已完成</view>
-        <view class="candidate-copy">当前人工确认结果未被覆盖</view>
-        <view class="candidate-result">
-          <text>约 {{record.nutritionCandidate.calories}} kcal</text>
-          <text>蛋白质 {{record.nutritionCandidate.protein}}g · 脂肪 {{record.nutritionCandidate.fat}}g · 碳水 {{record.nutritionCandidate.carbs}}g</text>
-        </view>
-        <view class="candidate-actions">
-          <view class="candidate-button primary" bindtap="acceptNutritionCandidate" hover-class="candidate-pressed" aria-role="button">采用新分析</view>
-          <view class="candidate-button secondary" bindtap="dismissNutritionCandidate" hover-class="candidate-pressed" aria-role="button">保留当前结果</view>
-        </view>
-      </view>
-
-      <view class="disclaimer">
-        基于图片和份量的营养估算，仅供饮食记录参考，<br />不构成医疗健康建议。
+      <view wx:else class="note-editor-shell">
+        <textarea class="note-editor" maxlength="50" placeholder="写下一句关于这餐的记忆…" placeholder-style="color: #AAA5A0; font-size: 28rpx; line-height: 44rpx;" value="{{record.note}}" focus="{{noteEditing}}" bindblur="saveNote" auto-height show-confirm-bar="false" aria-label="餐食小记，最多50字" />
       </view>
     </view>
+
   </view>
 
   <view class="bottom-actions">
     <view class="action-button" bindtap="confirmReplacement" hover-class="action-pressed" aria-role="button" aria-label="替换照片">
-      <view class="action-icon camera-icon" aria-hidden="true"><text></text></view>
+      <image class="action-icon" src="/assets/icons/camera.svg" mode="aspectFit" aria-hidden="true" />
       <view class="action-label">替换照片</view>
     </view>
     <view class="action-divider"></view>
     <view class="action-button" bindtap="retryStylization" hover-class="action-pressed" aria-role="button" aria-label="重新生成风格图">
-      <view class="action-icon refresh-icon" aria-hidden="true">↻</view>
+      <image class="action-icon" src="/assets/icons/refresh.svg" mode="aspectFit" aria-hidden="true" />
       <view class="action-label">重做风格图</view>
     </view>
     <view class="action-divider"></view>
-    <view class="action-button" bindtap="retryNutrition" hover-class="action-pressed" aria-role="button" aria-label="重新分析营养">
-      <view class="action-icon analysis-icon" aria-hidden="true"><text></text></view>
-      <view class="action-label">重新分析</view>
-    </view>
-    <view class="action-divider"></view>
     <view class="action-button danger" bindtap="deleteRecord" hover-class="action-pressed" aria-role="button" aria-label="删除这餐">
-      <view class="action-icon trash-icon" aria-hidden="true"><text></text></view>
+      <image class="action-icon" src="/assets/icons/delete.svg" mode="aspectFit" aria-hidden="true" />
       <view class="action-label">删除这餐</view>
     </view>
   </view>

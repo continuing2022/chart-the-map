@@ -3,7 +3,6 @@
     <view class="nav-brand-group" aria-label="食光日记，AI 饮食日记">
       <view class="nav-brand">
         <text>食光日记</text><text class="nav-spark">✦</text>
-        <view class="nav-swash" aria-hidden="true"></view>
       </view>
       <view class="nav-subtitle">AI 饮食日记</view>
     </view>

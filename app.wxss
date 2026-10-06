@@ -1,8 +1,10 @@
+@import "styles/design-system.wxss";
 page {
   min-height: 100%;
-  background: #fffaf4;
-  color: #151515;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: var(--text-body);
+  line-height: 1.5;
 }
 
 button::after {
@@ -10,5 +12,5 @@ button::after {
 }
 
 .safe-bottom {
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }

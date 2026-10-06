@@ -144,7 +144,7 @@ Page({
       title: '替换这餐的照片？',
       content: '替换后，当前风格图、营养估算和备注会一起被新记录取代。',
       confirmText: '继续替换',
-      confirmColor: '#e85d57',
+      confirmColor: '#EF625E',
       success: (result) => result.confirm && this.chooseReplacement()
     })
   },
@@ -191,7 +191,7 @@ Page({
     wx.showModal({
       title: '删除这餐？',
       content: '原始照片、风格图、营养估算和备注都会被删除。',
-      confirmColor: '#d83b35',
+      confirmColor: '#E8645C',
       success: (result) => {
         if (!result.confirm) return
         const record = processingService.deleteRecord(this.recordId)

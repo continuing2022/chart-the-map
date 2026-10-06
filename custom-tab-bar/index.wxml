@@ -11,14 +11,7 @@
       aria-role="button"
       aria-label="切换到{{item.text}}"
     >
-      <view class="tab-icon tab-icon-{{item.icon}}" aria-hidden="true">
-        <view wx:if="{{item.icon === 'home'}}" class="home-roof"></view>
-        <view wx:if="{{item.icon === 'home'}}" class="home-body"></view>
-        <view wx:else class="calendar-body">
-          <view class="calendar-rings"><text></text><text></text></view>
-          <view class="calendar-dots"><text></text><text></text><text></text><text></text></view>
-        </view>
-      </view>
+      <image class="tab-icon" src="/assets/icons/{{item.icon}}{{selected === item.index ? '-active' : ''}}.svg" mode="aspectFit" aria-hidden="true" />
       <text class="tab-label">{{item.text}}</text>
     </view>
   </view>

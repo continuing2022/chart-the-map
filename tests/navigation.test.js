@@ -63,7 +63,12 @@ test('home uses the top safe area and keeps all meal slots in one adaptive grid'
   assert.match(homeTemplate, /<app-nav/)
   assert.match(homeTemplate, /class="slot-list is-grid/)
   assert.doesNotMatch(homeTemplate, /is-mixed/)
-  assert.match(read('pages/home/index.wxss'), /\.slot-list\.is-grid[^}]*flex:\s*1/)
+  // Content can grow and scroll rather than clipping notes on short screens.
+  const homeStyles = read('pages/home/index.wxss')
+  const pageRule = homeStyles.match(/\.page\s*\{([^}]*)\}/)[1]
+  assert.doesNotMatch(pageRule, /(?:^|;)\s*height\s*:/)
+  assert.doesNotMatch(pageRule, /overflow:\s*hidden/)
+  assert.match(homeStyles, /\.slot-list[^}]*flex-wrap:\s*wrap/)
   for (const asset of ['meal-breakfast.png', 'meal-lunch.png', 'meal-dinner.png', 'meal-late-night.png']) {
     assert.match(homeTemplate, new RegExp(`/assets/${asset.replace('.', '\\.')}`))
   }

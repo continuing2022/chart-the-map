@@ -3,11 +3,6 @@
 
   <view class="section style-section">
     <view class="section-heading">
-      <view class="section-icon palette-icon" aria-hidden="true">
-        <text class="palette-dot dot-one"></text>
-        <text class="palette-dot dot-two"></text>
-        <text class="palette-hole"></text>
-      </view>
       <view class="section-title">默认可爱风格</view>
     </view>
 
@@ -66,23 +61,16 @@
   <view class="section privacy-section">
     <view class="section-heading privacy-heading">
       <view class="section-heading-main">
-        <view class="section-icon lock-title-icon" aria-hidden="true">
-          <view class="lock-title-loop"></view>
-          <view class="lock-title-body"></view>
-        </view>
         <view class="section-title">隐私与数据</view>
       </view>
       <view class="privacy-link" bindtap="showPrivacy" hover-class="privacy-link-pressed" aria-role="button" aria-label="查看隐私与数据说明">
-        查看说明<text>›</text>
+        查看说明<image class="ui-icon" src="/assets/icons/chevron-right.svg" mode="aspectFit" aria-hidden="true" />
       </view>
     </view>
 
     <view class="privacy-list">
       <view class="privacy-row">
-        <view class="row-icon row-lock" aria-hidden="true">
-          <view class="mini-lock-loop"></view>
-          <view class="mini-lock-body"><text></text></view>
-        </view>
+        <view class="row-icon row-lock" aria-hidden="true"><image class="ui-icon" src="/assets/icons/lock.svg" mode="aspectFit" /></view>
         <view class="row-copy">
           <view class="row-title">默认私密，专属于你</view>
           <view class="row-description">不会读取你的头像、昵称或手机号。</view>
@@ -90,10 +78,7 @@
       </view>
 
       <view class="privacy-row">
-        <view class="row-icon row-storage" aria-hidden="true">
-          <view class="storage-lid"></view>
-          <view class="storage-body"><text></text></view>
-        </view>
+        <view class="row-icon row-storage" aria-hidden="true"><image class="ui-icon" src="/assets/icons/storage.svg" mode="aspectFit" /></view>
         <view class="row-copy">
           <view class="row-title">保存在本机</view>
           <view class="row-description">记录与照片保存在微信小程序的本地空间。</view>
@@ -101,10 +86,7 @@
       </view>
 
       <view class="privacy-row">
-        <view class="row-icon row-manage" aria-hidden="true">
-          <view class="manage-clip"></view>
-          <view class="manage-board"><text>×</text></view>
-        </view>
+        <view class="row-icon row-manage" aria-hidden="true"><image class="ui-icon" src="/assets/icons/manage.svg" mode="aspectFit" /></view>
         <view class="row-copy">
           <view class="row-title">数据管理</view>
           <view class="row-description">可在详情页逐条删除；暂不支持导出或一键清空。</view>

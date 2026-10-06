@@ -9,16 +9,16 @@
   ],
   "window": {
     "navigationBarTitleText": "食光日记",
-    "navigationBarBackgroundColor": "#FFFAF4",
+    "navigationBarBackgroundColor": "#FAF8F4",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FFFAF4",
+    "backgroundColor": "#FAF8F4",
     "backgroundTextStyle": "light"
   },
   "tabBar": {
     "custom": true,
-    "color": "#7D7D7D",
-    "selectedColor": "#D94B43",
-    "backgroundColor": "#FFFEFC",
+    "color": "#74716E",
+    "selectedColor": "#EF625E",
+    "backgroundColor": "#FFF9F3",
     "list": [
       {
         "pagePath": "pages/home/index",

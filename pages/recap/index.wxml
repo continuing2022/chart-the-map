@@ -3,32 +3,23 @@
     <view class="nav-row">
       <view class="nav-side" style="width: {{navSideWidth}}px;">
         <view class="nav-action tap-target" hover-class="tap-soft" bindtap="close" aria-role="button" aria-label="关闭回顾">
-          <view class="close-icon"></view>
+          <image class="ui-icon" src="/assets/icons/close.svg" mode="aspectFit" aria-hidden="true" />
         </view>
       </view>
       <view class="nav-copy">
         <view class="nav-title-wrap">
-          <view class="title-rays" aria-hidden="true"><text></text><text></text></view>
           <view class="nav-title">{{title}}</view>
-          <view class="title-swash" aria-hidden="true"></view>
         </view>
-        <view class="nav-date"><text>{{dateLabel}}</text><text>{{weekdayLabel}}</text></view>
+        <view class="nav-date">{{dateLabel}} · {{weekdayLabel}}</view>
       </view>
       <view class="nav-spacer" style="width: {{navSideWidth}}px;"></view>
     </view>
   </view>
 
   <view class="content">
-    <view class="paper-glow paper-glow-one" aria-hidden="true"></view>
-    <view class="paper-glow paper-glow-two" aria-hidden="true"></view>
-    <view class="memory-heading" aria-label="认真吃饭的每一天，也值得被记住">
-      <view class="heading-line">认真吃饭的每一天，<text class="heading-ray">✦</text></view>
-      <view class="heading-line heading-line-two"><text class="heading-stroke"></text>也值得被记住 <text class="heading-heart">♡</text></view>
-      <view class="heading-aside" aria-hidden="true">好好吃饭<br/>是对生活的热爱 ♡</view>
-    </view>
+    <view class="memory-heading">今天，也有好好吃饭 <text class="heading-heart">♡</text></view>
 
     <view class="collage-shell">
-      <view class="shell-tape" aria-hidden="true"></view>
       <view class="photo-collage collage-{{recap.recordedMeals}}">
         <image
           wx:for="{{recap.records}}"
@@ -43,63 +34,33 @@
           aria-role="button"
           aria-label="查看这餐详情"
         />
-        <view class="collage-signature" aria-hidden="true">Good Food<br/>Good Memory<br/>♡</view>
         <view wx:if="{{collageNote}}" class="memory-note" aria-hidden="true">
-          <view class="note-tape"></view>
           <text>{{collageNote}}</text>
-          <view class="note-underline"></view>
         </view>
       </view>
     </view>
 
     <view class="summary-card">
-      <view class="summary-primary">
-        <view class="primary-metric meal-metric">
-          <view class="metric-icon bowl-icon" aria-hidden="true"><view class="bowl-lid"></view><view class="bowl-body"></view></view>
-          <view class="metric-value">{{recap.recordedMeals}}<text>餐</text></view>
-        </view>
-        <view class="metric-divider"></view>
-        <view class="primary-metric calorie-metric">
-          <view class="metric-icon fire-icon" aria-hidden="true">●</view>
-          <view wx:if="{{recap.analyzedMeals}}" class="metric-value">{{recap.totals.calories}}<text>kcal</text></view>
-          <view wx:else class="metric-pending">营养估算准备中</view>
-        </view>
-      </view>
-
-      <block wx:if="{{recap.analyzedMeals}}">
-        <view class="summary-rule"></view>
-        <view class="macro-list">
-          <view class="macro-item protein-item"><view class="macro-dot">●</view><view>{{recap.totals.protein}}<text>g</text></view></view>
-          <view class="macro-item fat-item"><view class="macro-dot">◆</view><view>{{recap.totals.fat}}<text>g</text></view></view>
-          <view class="macro-item carbs-item"><view class="macro-dot">●</view><view>{{recap.totals.carbs}}<text>g</text></view></view>
-        </view>
-        <view class="coverage">汇总来自 {{recap.analyzedMeals}} 餐图片估算，其中 {{recap.confirmedMeals}} 餐已人工确认，仅供记录参考。</view>
-      </block>
-      <view wx:else class="coverage pending-copy">目前只汇总已完成的营养估算，稍后可以再回来看看。</view>
+      <view class="summary-item"><view class="metric-value">{{recap.recordedMeals}}<text>餐</text></view><view class="metric-label">今日记录</view></view>
+      <view class="summary-item"><view class="metric-value">{{photoCount}}<text>张</text></view><view class="metric-label">食光照片</view></view>
+      <view class="summary-item"><view class="metric-value">{{noteCount}}<text>条</text></view><view class="metric-label">今日小记</view></view>
     </view>
 
-    <view class="guidance-card">
-      <view class="plant-art" aria-hidden="true">
-        <view class="plant-stem"></view>
-        <view class="plant-leaf leaf-one"></view>
-        <view class="plant-leaf leaf-two"></view>
-        <view class="plant-leaf leaf-three"></view>
+    <view class="journal-card day-note-card">
+      <view class="journal-card-title">今日一句</view>
+      <view wx:if="{{dayNotes.length}}" class="day-notes">
+        <view wx:for="{{dayNotes}}" wx:key="id" class="day-note tap-target" data-id="{{item.id}}" bindtap="openDetail" hover-class="tap-soft" aria-role="button" aria-label="查看{{item.slotLabel}}小记">
+          <text class="note-slot">{{item.slotLabel}}</text>
+          <text class="journal-copy">{{item.note}}</text>
+        </view>
       </view>
-      <view class="guidance-copy">
-        <view class="guidance-title">饮食小建议 <text class="guidance-spark">✦</text></view>
-        <block wx:if="{{recap.suggestions.length}}">
-          <view wx:for="{{recap.suggestions}}" wx:key="*this" class="guidance-text">{{item}}</view>
-        </block>
-        <view wx:else class="guidance-text">确认过菜品与份量后，这里会出现温和的下一餐建议。</view>
-        <view class="guidance-disclaimer">只依据你主动确认的食物类别，不是健康评分或医疗建议。</view>
-      </view>
-      <view class="guidance-aside" aria-hidden="true">好好照顾自己<br/>从每一餐开始 ♡</view>
+      <view wx:else class="journal-copy journal-placeholder empty-note">写一句话，记住今天的味道 ♡</view>
+      <view wx:if="{{!dayNotes.length}}" class="note-hint">在餐食详情里，为这一餐留下小记</view>
     </view>
 
     <view class="action-row">
-      <button class="primary-button" hover-class="primary-button-pressed" bindtap="openDateRecords">{{primaryActionLabel}}<text class="button-arrow">›</text></button>
-      <button class="secondary-button" hover-class="secondary-button-pressed" bindtap="close">{{secondaryActionLabel}}</button>
+      <button class="primary-button" hover-class="primary-button-pressed" bindtap="openDateRecords">{{primaryActionLabel}}</button>
     </view>
-    <view class="footer-note" aria-hidden="true">生活很简单<br/>一日三餐 ♡</view>
+    <view class="footer-note" aria-hidden="true">生活很简单，一日三餐 ♡</view>
   </view>
 </view>
