@@ -12,9 +12,14 @@ function providerError(code, message) {
   return Object.assign(new Error(message), { code, publicMessage: message })
 }
 
+function diagnosticCode(value) {
+  const code = String(value || '')
+  return /^[A-Za-z][A-Za-z0-9_.]{0,100}$/.test(code) ? code : ''
+}
+
 function safeFailure(error) {
   if (error.publicMessage) return error
-  const code = String(error.code || '')
+  const code = diagnosticCode(error.code || (error.cause && error.cause.code))
   if (/AuthFailure|UnauthorizedOperation/.test(code)) {
     return providerError('HUNYUAN_ACCESS_DENIED', '混元调用权限或凭证无效，请检查后端腾讯云配置。')
   }
@@ -23,6 +28,21 @@ function safeFailure(error) {
   }
   if (/LimitExceeded|RequestLimitExceeded/.test(code)) {
     return providerError('HUNYUAN_RATE_LIMITED', '混元当前繁忙，请稍后重试。')
+  }
+  if (/InvalidParameter|MissingParameter/.test(code)) {
+    return providerError('HUNYUAN_INVALID_PARAMETER', `混元拒绝了生成参数（${code}），请检查后端配置或图片格式。`)
+  }
+  if (/ResourceUnavailable|UnsupportedOperation|OperationDenied/.test(code)) {
+    return providerError('HUNYUAN_UNAVAILABLE', `混元服务暂不可用（${code}），请检查生图服务开通状态与地域。`)
+  }
+  if (error.name === 'TimeoutError' || /TIMEOUT|TIMEDOUT/.test(code)) {
+    return providerError('HUNYUAN_REQUEST_TIMEOUT', '连接混元或下载结果超时，请稍后重试。')
+  }
+  if (/^E(CONN|NET|HOST)|^UND_ERR_|ENOTFOUND/.test(code)) {
+    return providerError('HUNYUAN_CONNECTION_FAILED', '后端连接混元或结果存储失败，请稍后重试。')
+  }
+  if (/^(FailedOperation|InternalError|ResourceNotFound)\b/.test(code)) {
+    return providerError('HUNYUAN_FAILED', `混元图片生成失败（${code}），请根据错误码检查服务状态。`)
   }
   return providerError('HUNYUAN_FAILED', '混元图片生成失败，请稍后重试。')
 }
@@ -75,6 +95,8 @@ function createHunyuanProvider(config, dependencies = {}) {
     moderateImage: local.moderateImage,
     analyzeNutrition: local.analyzeNutrition,
     async stylize({ meal, originalAsset, task = {}, onSubmitted = async () => {}, isCurrent = () => true }) {
+      let stage = 'validate'
+      let upstreamRequestId
       const checkCurrent = () => {
         if (!isCurrent()) throw providerError('TASK_CANCELLED', '任务已被替换或删除。')
       }
@@ -90,6 +112,7 @@ function createHunyuanProvider(config, dependencies = {}) {
           if (imageBase64.length >= 8 * 1024 * 1024 || originalAsset.width >= 5000 || originalAsset.height >= 5000) {
             throw providerError('HUNYUAN_IMAGE_TOO_LARGE', '照片过大，请选择小于 6MB、边长小于 5000 像素的图片。')
           }
+          stage = 'submit'
           const submitted = await client.SubmitHunyuanImageJob({
             Prompt: `将参考照片转换为${stylePrompt}。保持原图中的食物种类、数量、餐具和构图，不增加食物，不添加文字。`,
             NegativePrompt: '新增食物，改变食物种类，人物，文字，模糊，变形',
@@ -97,15 +120,19 @@ function createHunyuanProvider(config, dependencies = {}) {
             Num: 1,
             LogoAdd: 1
           })
+          upstreamRequestId = submitted.RequestId
           if (!submitted.JobId) throw providerError('HUNYUAN_INVALID_JOB', '混元没有返回生成任务标识。')
           jobId = submitted.JobId
           submittedAt = now()
+          stage = 'persist-job'
           await onSubmitted(jobId, submittedAt)
         }
         const deadline = submittedAt + config.hunyuanTaskTimeoutMs
         while (now() < deadline) {
           checkCurrent()
+          stage = 'query'
           const result = await client.QueryHunyuanImageJob({ JobId: jobId })
+          upstreamRequestId = result.RequestId
           checkCurrent()
           const status = String(result.JobStatusCode)
           if (status === '5') {
@@ -113,15 +140,31 @@ function createHunyuanProvider(config, dependencies = {}) {
                 (result.ResultDetails && result.ResultDetails[0] !== 'Success')) {
               throw providerError('HUNYUAN_INVALID_RESULT', '混元未返回可用的生成图片，请稍后重试。')
             }
+            stage = 'download'
             return await downloadImage(result.ResultImage[0], config, fetchImpl)
           }
-          if (status === '4') throw providerError('HUNYUAN_JOB_FAILED', '混元未能生成该图片，请更换照片或稍后重试。')
+          if (status === '4') {
+            const jobCode = diagnosticCode(result.JobErrorCode)
+            const failure = providerError('HUNYUAN_JOB_FAILED', `混元未能生成该图片${jobCode ? `（${jobCode}）` : ''}，请更换照片或稍后重试。`)
+            failure.upstreamCode = jobCode
+            throw failure
+          }
           if (!['1', '2'].includes(status)) throw providerError('HUNYUAN_INVALID_STATUS', '混元返回的任务状态无效。')
           await wait(Math.min(config.hunyuanPollIntervalMs, Math.max(1, deadline - now())))
         }
         throw providerError('HUNYUAN_TIMEOUT', '混元生成超时，请稍后重试。')
       } catch (error) {
-        throw safeFailure(error)
+        const failure = safeFailure(error)
+        if (failure.code !== 'TASK_CANCELLED') {
+          const requestId = String(error.requestId || upstreamRequestId || '')
+          console.error('hunyuan_failed', {
+            stage,
+            code: failure.code,
+            upstreamCode: diagnosticCode(error.upstreamCode || error.code || (error.cause && error.cause.code)),
+            requestId: /^[a-fA-F0-9-]{1,64}$/.test(requestId) ? requestId : undefined
+          })
+        }
+        throw failure
       }
     }
   }

@@ -102,6 +102,41 @@ test('rejects untrusted result URLs, corrupt and oversized responses', async () 
   }
 })
 
+test('classifies SDK and network failures while logging only safe diagnostic fields', async () => {
+  const logs = []
+  const originalLog = console.error
+  console.error = (...args) => logs.push(args)
+  try {
+    for (const [upstreamCode, expectedCode] of [
+      ['FailedOperation.ServiceNotOpened', 'HUNYUAN_FAILED'],
+      ['InvalidParameterValue.Region', 'HUNYUAN_INVALID_PARAMETER'],
+      ['ResourceUnavailable', 'HUNYUAN_UNAVAILABLE'],
+      ['ETIMEDOUT', 'HUNYUAN_REQUEST_TIMEOUT'],
+      ['ECONNRESET', 'HUNYUAN_CONNECTION_FAILED']
+    ]) {
+      const provider = createHunyuanProvider(config, {
+        client: { async SubmitHunyuanImageJob() {
+          throw Object.assign(new Error('private credential and image'), { code: upstreamCode, requestId: '1234-abcd' })
+        } }
+      })
+      await assert.rejects(provider.stylize(input), { code: expectedCode })
+      const log = logs.at(-1)[1]
+      assert.equal(log.stage, 'submit')
+      assert.equal(log.upstreamCode, upstreamCode)
+      assert.equal(log.requestId, '1234-abcd')
+      assert.doesNotMatch(JSON.stringify(log), /private credential/)
+    }
+    const { provider } = fixture([{ JobStatusCode: '4', JobErrorCode: 'FailedOperation.ImageIllegalDetected' }])
+    await assert.rejects(provider.stylize(input), (error) => {
+      assert.match(error.publicMessage, /FailedOperation.ImageIllegalDetected/)
+      return true
+    })
+    assert.equal(logs.at(-1)[1].stage, 'query')
+  } finally {
+    console.error = originalLog
+  }
+})
+
 test('production selects Hunyuan with COS credentials and rejects incomplete dedicated credentials', () => {
   const base = { production: true, aiProvider: '', cosBucket: 'bucket', cosRegion: 'ap-guangzhou', cosSecretId: 'test-id', cosSecretKey: 'test-key', hunyuanSecretId: '', hunyuanSecretKey: '' }
   const loaded = loadConfig(base)

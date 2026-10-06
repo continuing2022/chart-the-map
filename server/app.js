@@ -395,6 +395,7 @@ function createApplication(options = {}) {
         ok: true,
         provider: provider.name || 'custom',
         storage: assetStore.name || 'custom',
+        ...(process.env.RENDER_GIT_COMMIT ? { revision: process.env.RENDER_GIT_COMMIT } : {}),
         ...(provider.capabilities ? { capabilities: provider.capabilities } : {}),
         ...(databasePool ? { database: 'postgres', persistence: 'postgres' } : {})
       })
